@@ -1,7 +1,6 @@
 use std::ffi::c_void;
 
 use gl::types::{GLboolean, GLenum, GLsizei, GLfloat};
-use log::info;
 
 pub struct VAO {
     id: gl::types::GLuint,
@@ -13,7 +12,7 @@ impl VAO {
         unsafe {
             gl::GenVertexArrays(1, &mut id);
         }
-        info!("VAO created. (id: {})", id);
+        // info!("VAO created. (id: {})", id);
         VAO { id }
     }
 
@@ -35,7 +34,7 @@ impl Drop for VAO {
         unsafe {
             gl::DeleteVertexArrays(1, &self.id);
         }
-        info!("VAO dropped. (id: {})", self.id);
+        // info!("VAO dropped. (id: {})", self.id);
     }
 }
 

@@ -106,18 +106,16 @@ fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
     let vbo = VBO::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW);
     vbo.bind();
 
-    // x and y are the coordinates of the tile
-    // normalize the coordinates to be between -1 and 1
     let x = (x as f32 / width) * 2.0 - 1.0;
     let y = (y as f32 / height) * 2.0 - 1.0;
 
     let tile_size = 2.0 / width;
 
-    let tile: [GLfloat; 12] = [
-        x, y, 0.0, // top left
-        x + tile_size, y, 0.0, // top right
-        x, y + tile_size, 0.0, // bottom left
-        x + tile_size, y + tile_size, 0.0, // bottom right
+    let tile: [f32; 16] = [
+        x,              y,             0.0, 1.0, // top left
+        x + tile_size,  y,             1.0, 1.0, // top right
+        x,              y + tile_size, 0.0, 0.0, // bottom left
+        x + tile_size,  y + tile_size, 1.0, 0.0, // bottom right
     ];
 
     vbo.bind_buffer_data(&tile);
@@ -126,15 +124,26 @@ fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
     ebo.bind();
     ebo.bind_buffer_data(&INDICES);
 
-    let vertex_attribute = VertexAttribute::new(
+    
+    let vertex_position = VertexAttribute::new(
         0,
-        3,
+        2,
         gl::FLOAT,
         gl::FALSE,
-        3 * std::mem::size_of::<GLfloat>() as GLsizei,
-        ptr::null(),
+        4 * std::mem::size_of::<GLfloat>() as GLsizei,
+    ptr::null(),
     );
-    vertex_attribute.enable();
+    vertex_position.enable();
+
+    let vertex_texture = VertexAttribute::new(
+        1,
+        2,
+        gl::FLOAT,
+        gl::FALSE,
+        4 * std::mem::size_of::<GLfloat>() as GLsizei,
+        (2 * std::mem::size_of::<GLfloat>()) as *const _,
+    );
+    vertex_texture.enable();
 
     vao.unbind();
     vbo.unbind();
