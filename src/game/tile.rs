@@ -15,7 +15,7 @@ pub enum TileType {
 }
 
 pub enum TileState {
-    Hidden,
+    Unrevealed,
     Revealed,
     Flagged,
 }
@@ -32,7 +32,7 @@ impl Tile {
 
         Tile {
             tile_type,
-            tile_state: TileState::Hidden,
+            tile_state: TileState::Unrevealed,
             vao,
         }
     }
@@ -53,7 +53,7 @@ impl Tile {
 
     pub fn is_hidden(&self) -> bool {
         match self.tile_state {
-            TileState::Hidden => true,
+            TileState::Unrevealed => true,
             _ => false,
         }
     }
@@ -76,12 +76,16 @@ impl Tile {
         self.tile_state = TileState::Revealed;
     }
 
-    pub fn flag(&mut self) {
-        self.tile_state = TileState::Flagged;
+    pub fn toggle_flag(&mut self) {
+        match self.tile_state {
+            TileState::Unrevealed => self.tile_state = TileState::Flagged,
+            TileState::Flagged => self.tile_state = TileState::Unrevealed,
+            _ => (),
+        }
     }
 
     pub fn unflag(&mut self) {
-        self.tile_state = TileState::Hidden;
+        self.tile_state = TileState::Unrevealed;
     }
 
     pub fn draw(&self, unrevealed_tile: &mut Texture, flag: &mut Texture) {

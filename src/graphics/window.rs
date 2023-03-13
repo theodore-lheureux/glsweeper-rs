@@ -1,4 +1,5 @@
 use glfw::{Action, Context, Key, WindowEvent};
+use log::info;
 use std::sync::mpsc::Receiver;
 
 use crate::{game::Game, WIDTH, HEIGHT};
@@ -26,7 +27,10 @@ impl Window {
         window.set_key_polling(true);
         window.set_framebuffer_size_polling(true);
         window.set_resizable(false);
-        
+        window.set_cursor_pos_polling(true);
+        window.set_cursor_mode(glfw::CursorMode::Normal);
+        // poll for clicks
+        window.set_mouse_button_polling(true);
 
         Window {
             glfw,
@@ -82,6 +86,17 @@ impl Window {
                 },
                 WindowEvent::Key(Key::R, _, Action::Press, _) => {
                     *game = Game::new(WIDTH, HEIGHT);
+                },
+                WindowEvent::MouseButton(button, action, _) => {
+                    if button == glfw::MouseButtonRight {
+                        if action == glfw::Action::Press {
+                            let x = self.window.get_cursor_pos().0 as i32;
+                            let y = self.window.get_cursor_pos().1 as i32;
+
+                            game.right_click(x, y);
+                            info!("Flagged tile at ({}, {})", x, y);
+                        } 
+                    }
                 },
                 _ => {}
             }
