@@ -8,7 +8,7 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(width: u32, height: u32, title: &str) -> Self {
+    pub fn new(width: u32, height: u32, title: &str) -> Window {
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
         glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
@@ -20,20 +20,28 @@ impl Window {
             .create_window(width, height, title, glfw::WindowMode::Windowed)
             .expect("Failed to create GLFW window.");
 
-            window.set_framebuffer_size_polling(true);
-            window.set_key_polling(true);
-        window.set_cursor_pos_polling(true);
-        window.set_scroll_polling(true);
-        // window.set_cursor_mode(glfw::CursorMode::Disabled);
+        window.set_key_polling(true);
+        window.set_framebuffer_size_polling(true);
 
-        Self { glfw, window, events }
+        Window {
+            glfw,
+            window,
+            events,
+        }
     }
 
     pub fn init_gl(&mut self) {
         self.window.make_current();
-        gl::load_with(|symbol| self.window.get_proc_address(symbol) as *const _);
+        gl::load_with(|symbol| 
+            self.window.get_proc_address(symbol) as *const _
+        );
         unsafe {
-            gl::Viewport(0, 0, self.window.get_framebuffer_size().0 as i32, self.window.get_framebuffer_size().1 as i32);
+            gl::Viewport(
+                0,
+                0,
+                self.window.get_framebuffer_size().0 as i32,
+                self.window.get_framebuffer_size().1 as i32,
+            );
             gl::Enable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
@@ -58,10 +66,27 @@ impl Window {
         }
     }
 
-    pub fn update(&mut self) {
-        self.process_events();
+    pub fn poll_events(&mut self) {
         self.glfw.poll_events();
+    }
+
+    pub fn swap_buffers(&mut self) {
         self.window.swap_buffers();
     }
+
+    pub fn get_framebuffer_size(&self) -> (i32, i32) {
+        self.window.get_framebuffer_size()
+    }
+
+    pub fn get_time(&self) -> f64 {
+        self.glfw.get_time()
+    }
+
+    pub fn clear_depth(&self) {
+        unsafe {
+            gl::Clear(gl::DEPTH_BUFFER_BIT);
+        }
+    }
+
 
 }
