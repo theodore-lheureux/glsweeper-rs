@@ -59,9 +59,9 @@ impl Game {
     }
 
     pub fn right_click(&mut self, x_px: i32, y_px: i32) {
-        let x = x_px / (WIDTH_PX / self.width);
-        let y = y_px / (HEIGHT_PX / self.height);
-        let y = self.height - y - 1;
+        let x = x_px as f32 / (WIDTH_PX as f32 / self.width as f32);
+        let y = y_px as f32 / (HEIGHT_PX as f32 / self.height as f32);
+        let y = self.height as f32 - y;
 
         self.flag_tile(x as usize, y as usize);
     }
