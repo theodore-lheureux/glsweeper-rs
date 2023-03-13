@@ -13,6 +13,7 @@ impl VAO {
         unsafe {
             gl::GenVertexArrays(1, &mut id);
         }
+        info!("VAO created. (id: {})", id);
         VAO { id }
     }
 
@@ -34,7 +35,7 @@ impl Drop for VAO {
         unsafe {
             gl::DeleteVertexArrays(1, &self.id);
         }
-        info!("VAO deleted. (id: {})", self.id);
+        info!("VAO dropped. (id: {})", self.id);
     }
 }
 
@@ -83,58 +84,58 @@ impl Drop for VBO {
         unsafe {
             gl::DeleteBuffers(1, &self.id);
         }
-        info!("VBO dropped. (id: {})", self.id);
+        // info!("VBO dropped. (id: {})", self.id);
     }
 }
 
-// pub struct EBO {
-//     id: gl::types::GLuint,
-//     r#type: gl::types::GLenum,
-//     usage: gl::types::GLenum,
-// }
+pub struct EBO {
+    id: gl::types::GLuint,
+    r#type: gl::types::GLenum,
+    usage: gl::types::GLenum,
+}
 
-// impl EBO {
-//     pub fn new(r#type: gl::types::GLenum, usage: gl::types::GLenum) -> Self {
-//         let mut id = 0;
-//         unsafe {
-//             gl::GenBuffers(1, &mut id);
-//         }
-//         EBO { id, r#type, usage }
-//     }
+impl EBO {
+    pub fn new(r#type: gl::types::GLenum, usage: gl::types::GLenum) -> Self {
+        let mut id = 0;
+        unsafe {
+            gl::GenBuffers(1, &mut id);
+        }
+        EBO { id, r#type, usage }
+    }
 
-//     pub fn bind(&self) {
-//         unsafe {
-//             gl::BindBuffer(self.r#type, self.id);
-//         }
-//     }
+    pub fn bind(&self) {
+        unsafe {
+            gl::BindBuffer(self.r#type, self.id);
+        }
+    }
 
-//     pub fn unbind(&self) {
-//         unsafe {
-//             gl::BindBuffer(self.r#type, 0);
-//         }
-//     }
+    pub fn unbind(&self) {
+        unsafe {
+            gl::BindBuffer(self.r#type, 0);
+        }
+    }
 
-//     pub fn bind_buffer_data(&self, data: &[u32]) {
-//         unsafe {
-//             gl::BufferData(
-//                 self.r#type,
-//                 (data.len() * std::mem::size_of::<u32>())
-//                     as gl::types::GLsizeiptr,
-//                 data.as_ptr() as *const gl::types::GLvoid,
-//                 self.usage,
-//             );
-//         }
-//     }
-// }
+    pub fn bind_buffer_data(&self, data: &[u32]) {
+        unsafe {
+            gl::BufferData(
+                self.r#type,
+                (data.len() * std::mem::size_of::<u32>())
+                    as gl::types::GLsizeiptr,
+                data.as_ptr() as *const gl::types::GLvoid,
+                self.usage,
+            );
+        }
+    }
+}
 
-// impl Drop for EBO {
-//     fn drop(&mut self) {
-//         unsafe {
-//             gl::DeleteBuffers(1, &self.id);
-//         }
-//         info!("EBO dropped. (id: {})", self.id);
-//     }
-// }
+impl Drop for EBO {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteBuffers(1, &self.id);
+        }
+        // info!("EBO dropped. (id: {})", self.id);
+    }
+}
 
 pub struct VertexAttribute {
     pub index: gl::types::GLuint,
@@ -176,6 +177,6 @@ impl Drop for VertexAttribute {
         unsafe {
             gl::DisableVertexAttribArray(self.index);
         }
-        info!("Dropping VertexAttribute: {}", self.index);
+        // info!("Dropping VertexAttribute: {}", self.index);
     }
 }

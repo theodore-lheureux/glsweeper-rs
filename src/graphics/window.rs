@@ -22,6 +22,8 @@ impl Window {
 
         window.set_key_polling(true);
         window.set_framebuffer_size_polling(true);
+        window.set_resizable(false);
+        
 
         Window {
             glfw,
@@ -66,14 +68,6 @@ impl Window {
         }
     }
 
-    pub fn poll_events(&mut self) {
-        self.glfw.poll_events();
-    }
-
-    pub fn swap_buffers(&mut self) {
-        self.window.swap_buffers();
-    }
-
     pub fn get_framebuffer_size(&self) -> (i32, i32) {
         self.window.get_framebuffer_size()
     }
@@ -82,11 +76,25 @@ impl Window {
         self.glfw.get_time()
     }
 
-    pub fn clear_depth(&self) {
+    pub fn update(&mut self) {
+        self.process_events();
+        self.window.swap_buffers();
+        self.glfw.poll_events();
         unsafe {
             gl::Clear(gl::DEPTH_BUFFER_BIT);
         }
     }
 
+    pub fn set_wireframe_mode(&mut self, wireframe: bool) {
+        if wireframe {
+            unsafe {
+                gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+            }
+        } else {
+            unsafe {
+                gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+            }
+        }
+    }
 
 }
