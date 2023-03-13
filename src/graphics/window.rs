@@ -1,10 +1,13 @@
 use glfw::{Action, Context, Key, WindowEvent};
 use std::sync::mpsc::Receiver;
 
+use crate::{game::Game, WIDTH, HEIGHT};
+
 pub struct Window {
     pub glfw: glfw::Glfw,
     pub window: glfw::Window,
     pub events: Receiver<(f64, WindowEvent)>,
+    wireframe: bool,
 }
 
 impl Window {
@@ -29,6 +32,7 @@ impl Window {
             glfw,
             window,
             events,
+            wireframe: false,
         }
     }
 
@@ -54,7 +58,7 @@ impl Window {
         self.window.should_close()
     }
 
-    pub fn process_events(&mut self) {
+    pub fn process_events(&mut self, game: &mut Game) {
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
                 WindowEvent::FramebufferSize(width, height) => unsafe {
@@ -62,7 +66,23 @@ impl Window {
                 },
                 WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
                     self.window.set_should_close(true)
-                }
+                },
+                WindowEvent::Key(Key::W, _, Action::Press, _) => {
+                    if self.wireframe {
+                        self.wireframe = false;
+                        unsafe {
+                            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+                        }
+                    } else {
+                        self.wireframe = true;
+                        unsafe {
+                            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+                        }
+                    }
+                },
+                WindowEvent::Key(Key::R, _, Action::Press, _) => {
+                    *game = Game::new(WIDTH, HEIGHT);
+                },
                 _ => {}
             }
         }
@@ -76,8 +96,8 @@ impl Window {
         self.glfw.get_time()
     }
 
-    pub fn update(&mut self) {
-        self.process_events();
+    pub fn update(&mut self, game: &mut Game) {
+        self.process_events(game);
         self.window.swap_buffers();
         self.glfw.poll_events();
         unsafe {
@@ -86,6 +106,7 @@ impl Window {
     }
 
     pub fn set_wireframe_mode(&mut self, wireframe: bool) {
+        self.wireframe = wireframe;
         if wireframe {
             unsafe {
                 gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);

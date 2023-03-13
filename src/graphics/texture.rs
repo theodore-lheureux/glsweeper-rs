@@ -5,10 +5,11 @@ use log::info;
 
 pub struct Texture {
     id: gl::types::GLuint,
+    unit: Option<u32>,
 }
 
 impl Texture {
-    pub fn new(path: &Path) -> Self {
+    pub fn new(path: &Path, unit: u32) -> Self {
 
         let img = image::open(path).expect("Failed to load texture image.");
         let rgba = img.into_rgba8();
@@ -19,10 +20,12 @@ impl Texture {
         let mut id = 0;
         unsafe {
             gl::GenTextures(1, &mut id);
+            gl::ActiveTexture(gl::TEXTURE0 + unit);
+            gl::BindTexture(gl::TEXTURE_2D, id);
         }
 
-        let texture = Self { id };
-        texture.bind();
+        let mut texture = Self { id, unit: Some(unit) };
+
         unsafe {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
@@ -50,15 +53,19 @@ impl Texture {
 
     }
 
-    pub fn bind(&self) {
+    pub fn bind(&mut self, unit: u32) {
         unsafe {
+            gl::ActiveTexture(gl::TEXTURE0 + unit);
             gl::BindTexture(gl::TEXTURE_2D, self.id);
+            self.unit = Some(unit);
         }
     }
 
-    pub fn unbind(&self) {
+    pub fn unbind(&mut self) {
         unsafe {
+            gl::ActiveTexture(gl::TEXTURE0 + self.unit.unwrap());
             gl::BindTexture(gl::TEXTURE_2D, 0);
+            self.unit = None;
         }
     }
 }

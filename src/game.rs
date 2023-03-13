@@ -1,3 +1,5 @@
+use crate::graphics::texture::Texture;
+
 pub mod tile;
 
 pub enum GameState {
@@ -18,7 +20,14 @@ impl Game {
         for r in 0..height {
             let mut row = Vec::new();
             for c in 0..width {
-                row.push(tile::Tile::new(tile::TileType::Empty(0), r, c, width, height));
+
+                let mut tile = tile::Tile::new(tile::TileType::Empty(0), c, r, width, height);
+
+                if rand::random() {
+                    tile.flag();
+                } 
+                row.push(tile);
+
             }
             tiles.push(row);
         }
@@ -37,10 +46,10 @@ impl Game {
         self.tiles[y][x].reveal();
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, unrevealed_tile: &mut Texture, flag: &mut Texture) {
         for row in &self.tiles {
             for tile in row {
-                tile.draw();
+                tile.draw(unrevealed_tile, flag);
             }
         }
     }

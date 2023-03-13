@@ -2,7 +2,7 @@ use std::ptr;
 
 use gl::types::{GLfloat, GLsizei};
 
-use crate::graphics::gl_wrapper::{VAO, VBO, EBO, VertexAttribute};
+use crate::graphics::{gl_wrapper::{VAO, VBO, EBO, VertexAttribute}, texture::Texture};
 
 const INDICES: [u32; 6] = [
     0, 1, 2, // first triangle
@@ -84,8 +84,15 @@ impl Tile {
         self.tile_state = TileState::Hidden;
     }
 
-    pub fn draw(&self) {
+    pub fn draw(&self, unrevealed_tile: &mut Texture, flag: &mut Texture) {
         self.vao.bind();
+
+        if self.is_flagged() {
+            flag.bind(0);
+        } else {
+            unrevealed_tile.bind(0);
+        }
+
         unsafe {
             gl::DrawElements(
                 gl::TRIANGLES,
@@ -94,7 +101,6 @@ impl Tile {
                 ptr::null(),
             );
         }
-        self.vao.unbind();
     }
 
 }
