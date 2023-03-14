@@ -23,6 +23,7 @@ pub enum TileState {
     Revealed,
     Flagged,
     Exploded,
+    WrongFlag,
 }
 
 pub struct Tile {
@@ -103,6 +104,7 @@ impl Tile {
                 TileType::Empty(n) => textures.tile_revealed[n as usize].bind(0),
             },
             TileState::Flagged => textures.flag.bind(0),
+            TileState::WrongFlag => textures.flag_wrong.bind(0),
             TileState::Exploded => textures.mine_exploded.bind(0),
         }
 

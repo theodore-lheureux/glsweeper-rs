@@ -43,7 +43,7 @@ impl Game {
         }
     }
 
-    pub fn place_mines(&mut self, start_x: usize, start_y: usize) {
+    fn place_mines(&mut self, start_x: usize, start_y: usize) {
         let mut mines = 0;
         while mines < MINE_COUNT {
             let x = rand::random::<usize>() % self.width as usize;
@@ -64,7 +64,7 @@ impl Game {
         self.place_numbers();
     }
 
-    pub fn place_numbers(&mut self) {
+    fn place_numbers(&mut self) {
         for y in 0..self.height {
             for x in 0..self.width {
                 if self.tiles[y as usize][x as usize].is_bomb() {
@@ -95,7 +95,7 @@ impl Game {
         }
     }
 
-    pub fn reveal_tile(&mut self, x: usize, y: usize) {
+    fn reveal_tile(&mut self, x: usize, y: usize) {
         let tile = &mut self.tiles[y][x];
 
         match tile.tile_state {
@@ -136,7 +136,7 @@ impl Game {
         }
     }
 
-    pub fn is_won(&self) -> bool {
+    fn is_won(&self) -> bool {
         for row in &self.tiles {
             for tile in row {
                 if tile.tile_type != TileType::Bomb && tile.tile_state != TileState::Revealed {
@@ -147,17 +147,36 @@ impl Game {
         true
     }
 
-    pub fn flag_tile(&mut self, x: usize, y: usize) {
+    fn check_for_win(&mut self) {
+        if self.is_won() {
+            self.game_state = GameState::Won;
+            for row in &mut self.tiles {
+                for tile in row {
+                    if tile.tile_type == TileType::Bomb {
+                        tile.tile_state = TileState::Flagged;
+                    }
+                }
+            }
+        }
+    }
+
+    fn flag_tile(&mut self, x: usize, y: usize) {
         self.tiles[y][x].toggle_flag();
     }
 
-    pub fn reveal_all(&mut self) {
+    fn reveal_all(&mut self) {
         for row in &mut self.tiles {
             for tile in row {
                 match tile.tile_type {
                     TileType::Bomb => {
                         if tile.tile_state != TileState::Exploded {
                             tile.tile_state = TileState::Revealed;
+                        }
+                    }
+                    TileType::Empty(_) => {
+                        match tile.tile_state {
+                            TileState::Flagged => tile.tile_state = TileState::WrongFlag,
+                            _ => (),
                         }
                     }
                     _ => (),
@@ -282,19 +301,6 @@ impl Game {
             }
             TileState::Unrevealed | TileState::Flagged => self.flag_tile(x, y),
             _ => (),
-        }
-    }
-
-    pub fn check_for_win(&mut self) {
-        if self.is_won() {
-            self.game_state = GameState::Won;
-            for row in &mut self.tiles {
-                for tile in row {
-                    if tile.tile_type == TileType::Bomb {
-                        tile.tile_state = TileState::Flagged;
-                    }
-                }
-            }
         }
     }
 

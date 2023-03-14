@@ -6,6 +6,7 @@ pub struct GameTextures {
     pub tile_unrevealed: Texture,
     pub tile_revealed: Vec<Texture>,
     pub flag: Texture,
+    pub flag_wrong: Texture,
     pub mine_exploded: Texture,
     pub mine_revealed: Texture,
 }
@@ -26,6 +27,7 @@ impl GameTextures {
                 Texture::new(Path::new("textures/tile_revealed_8.png"), 0),
             ],
             flag: Texture::new(Path::new("textures/flag.png"), 0),
+            flag_wrong: Texture::new(Path::new("textures/flag_wrong.png"), 0),
             mine_exploded: Texture::new(Path::new("textures/mine_exploded.png"), 0),
             mine_revealed: Texture::new(Path::new("textures/mine_revealed.png"), 0),
         }
