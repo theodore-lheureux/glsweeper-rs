@@ -2,7 +2,7 @@ use std::ptr;
 
 use gl::types::{GLfloat, GLsizei};
 
-use crate::graphics::gl_wrapper::{VAO, VBO, EBO, VertexAttribute};
+use crate::graphics::gl_wrapper::{VertexAttribute, EBO, VAO, VBO};
 
 use super::game_textures::GameTextures;
 
@@ -11,13 +11,13 @@ const INDICES: [u32; 6] = [
     1, 2, 3, // second triangle
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TileType {
     Bomb,
     Empty(u8),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TileState {
     Unrevealed,
     Revealed,
@@ -44,38 +44,23 @@ impl Tile {
     }
 
     pub fn is_bomb(&self) -> bool {
-        match self.tile_type {
-            TileType::Bomb => true,
-            _ => false,
-        }
+        matches!(self.tile_type, TileType::Bomb)
     }
 
     pub fn is_empty(&self) -> bool {
-        match self.tile_type {
-            TileType::Empty(_) => true,
-            _ => false,
-        }
+        matches!(self.tile_type, TileType::Empty(0))
     }
 
     pub fn is_hidden(&self) -> bool {
-        match self.tile_state {
-            TileState::Unrevealed => true,
-            _ => false,
-        }
+        matches!(self.tile_state, TileState::Unrevealed)
     }
 
     pub fn is_revealed(&self) -> bool {
-        match self.tile_state {
-            TileState::Revealed => true,
-            _ => false,
-        }
+        matches!(self.tile_state, TileState::Revealed)
     }
 
     pub fn is_flagged(&self) -> bool {
-        match self.tile_state {
-            TileState::Flagged => true,
-            _ => false,
-        }
+        matches!(self.tile_state, TileState::Flagged)
     }
 
     pub fn reveal(&mut self) {
@@ -109,15 +94,9 @@ impl Tile {
         }
 
         unsafe {
-            gl::DrawElements(
-                gl::TRIANGLES,
-                6,
-                gl::UNSIGNED_INT,
-                ptr::null(),
-            );
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
         }
     }
-
 }
 
 fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
@@ -133,10 +112,22 @@ fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
     let tile_size = 2.0 / width;
 
     let tile: [f32; 16] = [
-        x,              y,             0.0, 1.0, // top left
-        x + tile_size,  y,             1.0, 1.0, // top right
-        x,              y + tile_size, 0.0, 0.0, // bottom left
-        x + tile_size,  y + tile_size, 1.0, 0.0, // bottom right
+        x,
+        y,
+        0.0,
+        1.0, // top left
+        x + tile_size,
+        y,
+        1.0,
+        1.0, // top right
+        x,
+        y + tile_size,
+        0.0,
+        0.0, // bottom left
+        x + tile_size,
+        y + tile_size,
+        1.0,
+        0.0, // bottom right
     ];
 
     vbo.bind_buffer_data(&tile);
@@ -145,26 +136,27 @@ fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
     ebo.bind();
     ebo.bind_buffer_data(&INDICES);
 
-    
-    let vertex_position = VertexAttribute::new(
-        0,
-        2,
-        gl::FLOAT,
-        gl::FALSE,
-        4 * std::mem::size_of::<GLfloat>() as GLsizei,
-    ptr::null(),
-    );
-    vertex_position.enable();
+    unsafe {
+        let vertex_position = VertexAttribute::new(
+            0,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            4 * std::mem::size_of::<GLfloat>() as GLsizei,
+            ptr::null(),
+        );
+        vertex_position.enable();
 
-    let vertex_texture = VertexAttribute::new(
-        1,
-        2,
-        gl::FLOAT,
-        gl::FALSE,
-        4 * std::mem::size_of::<GLfloat>() as GLsizei,
-        (2 * std::mem::size_of::<GLfloat>()) as *const _,
-    );
-    vertex_texture.enable();
+        let vertex_texture = VertexAttribute::new(
+            1,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            4 * std::mem::size_of::<GLfloat>() as GLsizei,
+            (2 * std::mem::size_of::<GLfloat>()) as *const _,
+        );
+        vertex_texture.enable();
+    }
 
     vao.unbind();
     vbo.unbind();

@@ -2,11 +2,10 @@ use std::ptr;
 
 use graphics::gl_wrapper::VAO;
 
-pub mod logger;
 pub mod custom_errors;
-pub mod graphics;
 pub mod game;
-
+pub mod graphics;
+pub mod logger;
 
 pub const WIDTH: i32 = 10;
 pub const HEIGHT: i32 = 10;

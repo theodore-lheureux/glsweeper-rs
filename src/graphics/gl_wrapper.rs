@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 
-use gl::types::{GLboolean, GLenum, GLsizei, GLfloat};
+use gl::types::{GLboolean, GLenum, GLfloat, GLsizei};
 
 pub struct VAO {
     id: gl::types::GLuint,
@@ -69,8 +69,7 @@ impl VBO {
         unsafe {
             gl::BufferData(
                 self.r#type,
-                (data.len() * std::mem::size_of::<GLfloat>())
-                    as gl::types::GLsizeiptr,
+                (data.len() * std::mem::size_of::<GLfloat>()) as gl::types::GLsizeiptr,
                 &data[0] as *const f32 as *const c_void,
                 self.usage,
             );
@@ -118,8 +117,7 @@ impl EBO {
         unsafe {
             gl::BufferData(
                 self.r#type,
-                (data.len() * std::mem::size_of::<u32>())
-                    as gl::types::GLsizeiptr,
+                (data.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
                 data.as_ptr() as *const gl::types::GLvoid,
                 self.usage,
             );
@@ -141,7 +139,7 @@ pub struct VertexAttribute {
 }
 
 impl VertexAttribute {
-    pub fn new(
+    pub unsafe fn new(
         index: u32,
         size: i32,
         r#type: GLenum,
@@ -149,11 +147,7 @@ impl VertexAttribute {
         stride: GLsizei,
         pointer: *const c_void,
     ) -> Self {
-        unsafe {
-            gl::VertexAttribPointer(
-                index, size, r#type, normalized, stride, pointer,
-            );
-        }
+        gl::VertexAttribPointer(index, size, r#type, normalized, stride, pointer);
 
         VertexAttribute { index }
     }

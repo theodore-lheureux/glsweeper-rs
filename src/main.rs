@@ -1,21 +1,23 @@
 use glsweeper_rs::{
     clear_draw,
-    game::{Game, game_textures::{GameTextures}},
+    game::{game_textures::GameTextures, Game},
     graphics::{shader::Shader, window::Window},
-    logger
+    logger,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::init();
 
-    let mut window =
-        Window::new(glsweeper_rs::WIDTH_PX as u32, glsweeper_rs::HEIGHT_PX as u32, "GL Sweeper");
+    let mut window = Window::new(
+        glsweeper_rs::WIDTH_PX as u32,
+        glsweeper_rs::HEIGHT_PX as u32,
+        "GL Sweeper",
+    );
     window.init_gl();
 
     let tile_shader = Shader::new("shaders/tile.vs", "shaders/tile.fs");
     let mut textures = GameTextures::new();
-    
-    
+
     let mut current_game = Game::new(glsweeper_rs::WIDTH, glsweeper_rs::HEIGHT);
 
     tile_shader.use_program();

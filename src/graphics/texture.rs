@@ -10,7 +10,6 @@ pub struct Texture {
 
 impl Texture {
     pub fn new(path: &Path, unit: u32) -> Self {
-
         let img = image::open(path).expect("Failed to load texture image.");
         let rgba = img.into_rgba8();
         let (width, height) = rgba.dimensions();
@@ -24,14 +23,17 @@ impl Texture {
             gl::BindTexture(gl::TEXTURE_2D, id);
         }
 
-        let mut texture = Self { id, unit: Some(unit) };
+        let mut texture = Self {
+            id,
+            unit: Some(unit),
+        };
 
         unsafe {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-            
+
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
@@ -50,7 +52,6 @@ impl Texture {
         info!("Texture created. (id: {})", id);
 
         texture
-
     }
 
     pub fn bind(&mut self, unit: u32) {

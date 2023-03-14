@@ -73,8 +73,8 @@ impl Game {
 
                 let mut bombs = 0;
 
-                for x_offset in -1 as isize..2 {
-                    for y_offset in -1 as isize..2 {
+                for x_offset in -1..2 {
+                    for y_offset in -1..2 {
                         if x_offset == 0 && y_offset == 0 {
                             continue;
                         }
@@ -82,10 +82,13 @@ impl Game {
                         let x = x as isize + x_offset;
                         let y = y as isize + y_offset;
 
-                        if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
-                            if self.tiles[y as usize][x as usize].is_bomb() {
-                                bombs += 1;
-                            }
+                        if x >= 0
+                            && x < self.width as isize
+                            && y >= 0
+                            && y < self.height as isize
+                            && self.tiles[y as usize][x as usize].is_bomb()
+                        {
+                            bombs += 1;
                         }
                     }
                 }
@@ -98,41 +101,33 @@ impl Game {
     fn reveal_tile(&mut self, x: usize, y: usize) {
         let tile = &mut self.tiles[y][x];
 
-        match tile.tile_state {
-            TileState::Unrevealed => match tile.tile_type {
-                TileType::Bomb => {
-                    tile.tile_state = TileState::Exploded;
-                    self.reveal_all();
-                    self.game_state = GameState::Lost;
-                    return;
-                }
-                TileType::Empty(0) => {
-                    tile.reveal();
-                    for x_offset in -1 as isize..2 {
-                        for y_offset in -1 as isize..2 {
-                            if x_offset == 0 && y_offset == 0 {
-                                continue;
-                            }
+        if tile.is_revealed() {
+            return;
+        }
+        match tile.tile_type {
+            TileType::Bomb => {
+                tile.tile_state = TileState::Exploded;
+                self.reveal_all();
+                self.game_state = GameState::Lost;
+            }
+            TileType::Empty(0) => {
+                tile.reveal();
+                for x_offset in -1..2 {
+                    for y_offset in -1..2 {
+                        if x_offset == 0 && y_offset == 0 {
+                            continue;
+                        }
 
-                            let x = x as isize + x_offset;
-                            let y = y as isize + y_offset;
+                        let x = x as isize + x_offset;
+                        let y = y as isize + y_offset;
 
-                            if x >= 0
-                                && x < self.width as isize
-                                && y >= 0
-                                && y < self.height as isize
-                            {
-                                self.reveal_tile(x as usize, y as usize);
-                            }
+                        if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                            self.reveal_tile(x as usize, y as usize);
                         }
                     }
                 }
-                _ => {
-                    tile.reveal();
-                    return;
-                }
             }
-            _ => return,
+            _ => tile.reveal(),
         }
     }
 
@@ -174,12 +169,10 @@ impl Game {
                         }
                     }
                     TileType::Empty(_) => {
-                        match tile.tile_state {
-                            TileState::Flagged => tile.tile_state = TileState::WrongFlag,
-                            _ => (),
+                        if tile.tile_state == TileState::Flagged {
+                            tile.tile_state = TileState::WrongFlag;
                         }
                     }
-                    _ => (),
                 }
             }
         }
@@ -201,8 +194,8 @@ impl Game {
         };
 
         let mut flags = 0;
-        for x_offset in -1 as isize..2 {
-            for y_offset in -1 as isize..2 {
+        for x_offset in -1..2 {
+            for y_offset in -1..2 {
                 if x_offset == 0 && y_offset == 0 {
                     continue;
                 }
@@ -222,8 +215,8 @@ impl Game {
         }
 
         if flags == bomb_count {
-            for x_offset in -1 as isize..2 {
-                for y_offset in -1 as isize..2 {
+            for x_offset in -1..2 {
+                for y_offset in -1..2 {
                     if x_offset == 0 && y_offset == 0 {
                         continue;
                     }
@@ -231,11 +224,7 @@ impl Game {
                     let x = x as isize + x_offset;
                     let y = y as isize + y_offset;
 
-                    if x >= 0
-                        && x < self.width as isize
-                        && y >= 0
-                        && y < self.height as isize
-                    {
+                    if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
                         let tile = &mut self.tiles[y as usize][x as usize];
                         if tile.tile_state == TileState::Unrevealed {
                             self.reveal_tile(x as usize, y as usize);

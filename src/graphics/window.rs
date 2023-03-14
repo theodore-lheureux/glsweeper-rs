@@ -2,7 +2,7 @@ use glfw::{Action, Context, Key, WindowEvent};
 use log::info;
 use std::sync::mpsc::Receiver;
 
-use crate::{game::Game, WIDTH, HEIGHT};
+use crate::{game::Game, HEIGHT, WIDTH};
 
 pub struct Window {
     pub glfw: glfw::Glfw,
@@ -41,9 +41,7 @@ impl Window {
 
     pub fn init_gl(&mut self) {
         self.window.make_current();
-        gl::load_with(|symbol| 
-            self.window.get_proc_address(symbol) as *const _
-        );
+        gl::load_with(|symbol| self.window.get_proc_address(symbol) as *const _);
         unsafe {
             gl::Viewport(
                 0,
@@ -69,7 +67,7 @@ impl Window {
                 },
                 WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
                     self.window.set_should_close(true)
-                },
+                }
                 WindowEvent::Key(Key::W, _, Action::Press, _) => {
                     if self.wireframe {
                         self.wireframe = false;
@@ -82,37 +80,35 @@ impl Window {
                             gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
                         }
                     }
-                },
+                }
                 WindowEvent::Key(Key::R, _, Action::Press, _) => {
                     *game = Game::new(WIDTH, HEIGHT);
-                },
+                }
                 WindowEvent::Key(Key::Space, _, Action::Press, _) => {
                     let x_px = self.window.get_cursor_pos().0 as i32;
                     let y_px = self.window.get_cursor_pos().1 as i32;
 
                     game.space_click(x_px, y_px);
-                },
-                WindowEvent::MouseButton(button, action, _) => {
-                    match button {
-                        glfw::MouseButtonLeft => {
-                            if action == glfw::Action::Press {
-                                let x = self.window.get_cursor_pos().0 as i32;
-                                let y = self.window.get_cursor_pos().1 as i32;
+                }
+                WindowEvent::MouseButton(button, action, _) => match button {
+                    glfw::MouseButtonLeft => {
+                        if action == glfw::Action::Press {
+                            let x = self.window.get_cursor_pos().0 as i32;
+                            let y = self.window.get_cursor_pos().1 as i32;
 
-                                game.left_click(x, y);
-                                info!("Clicked tile at ({}, {})", x, y);
-                            }
-                        },
-                        glfw::MouseButtonRight => {
-                            if action == glfw::Action::Press {
-                                let x = self.window.get_cursor_pos().0 as i32;
-                                let y = self.window.get_cursor_pos().1 as i32;
-
-                                game.right_click(x, y);
-                            }
-                        },
-                        _ => {}
+                            game.left_click(x, y);
+                            info!("Clicked tile at ({}, {})", x, y);
+                        }
                     }
+                    glfw::MouseButtonRight => {
+                        if action == glfw::Action::Press {
+                            let x = self.window.get_cursor_pos().0 as i32;
+                            let y = self.window.get_cursor_pos().1 as i32;
+
+                            game.right_click(x, y);
+                        }
+                    }
+                    _ => {}
                 },
                 _ => {}
             }
@@ -148,5 +144,4 @@ impl Window {
             }
         }
     }
-
 }

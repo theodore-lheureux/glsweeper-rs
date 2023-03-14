@@ -1,4 +1,4 @@
-use std::{fs, ffi::CString};
+use std::{ffi::CString, fs};
 
 use log::info;
 
@@ -7,10 +7,11 @@ pub struct Shader {
 }
 
 impl Shader {
-
     pub fn new(vertex_path: &str, fragment_path: &str) -> Self {
-        let vertex_code = fs::read_to_string(vertex_path).expect("Failed to read vertex shader file.");
-        let fragment_code = fs::read_to_string(fragment_path).expect("Failed to read fragment shader file.");
+        let vertex_code =
+            fs::read_to_string(vertex_path).expect("Failed to read vertex shader file.");
+        let fragment_code =
+            fs::read_to_string(fragment_path).expect("Failed to read fragment shader file.");
 
         let vertex_shader = Self::compile_shader(vertex_code.as_str(), gl::VERTEX_SHADER);
         let fragment_shader = Self::compile_shader(fragment_code.as_str(), gl::FRAGMENT_SHADER);
@@ -44,7 +45,12 @@ impl Shader {
             }
             let error = create_whitespace_cstring_with_len(len as usize);
             unsafe {
-                gl::GetShaderInfoLog(id, len, std::ptr::null_mut(), error.as_ptr() as *mut gl::types::GLchar);
+                gl::GetShaderInfoLog(
+                    id,
+                    len,
+                    std::ptr::null_mut(),
+                    error.as_ptr() as *mut gl::types::GLchar,
+                );
             }
             panic!("{}", error.to_string_lossy().into_owned());
         }
@@ -73,7 +79,12 @@ impl Shader {
             }
             let error = create_whitespace_cstring_with_len(len as usize);
             unsafe {
-                gl::GetProgramInfoLog(id, len, std::ptr::null_mut(), error.as_ptr() as *mut gl::types::GLchar);
+                gl::GetProgramInfoLog(
+                    id,
+                    len,
+                    std::ptr::null_mut(),
+                    error.as_ptr() as *mut gl::types::GLchar,
+                );
             }
             panic!("{}", error.to_string_lossy().into_owned());
         }
@@ -91,22 +102,30 @@ impl Shader {
 
     pub fn set_bool(&self, name: &str, value: bool) {
         unsafe {
-            gl::Uniform1i(gl::GetUniformLocation(self.id, name.as_ptr() as *const i8), value as i32);
+            gl::Uniform1i(
+                gl::GetUniformLocation(self.id, name.as_ptr() as *const i8),
+                value as i32,
+            );
         }
     }
 
     pub fn set_int(&self, name: &str, value: i32) {
         unsafe {
-            gl::Uniform1i(gl::GetUniformLocation(self.id, name.as_ptr() as *const i8), value);
+            gl::Uniform1i(
+                gl::GetUniformLocation(self.id, name.as_ptr() as *const i8),
+                value,
+            );
         }
     }
 
     pub fn set_float(&self, name: &str, value: f32) {
         unsafe {
-            gl::Uniform1f(gl::GetUniformLocation(self.id, name.as_ptr() as *const i8), value);
+            gl::Uniform1f(
+                gl::GetUniformLocation(self.id, name.as_ptr() as *const i8),
+                value,
+            );
         }
     }
-
 }
 
 fn create_whitespace_cstring_with_len(len: usize) -> CString {
