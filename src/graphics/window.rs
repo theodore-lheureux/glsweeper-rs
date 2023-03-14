@@ -87,14 +87,25 @@ impl Window {
                     *game = Game::new(WIDTH, HEIGHT);
                 },
                 WindowEvent::MouseButton(button, action, _) => {
-                    if button == glfw::MouseButtonRight {
-                        if action == glfw::Action::Press {
-                            let x = self.window.get_cursor_pos().0 as i32;
-                            let y = self.window.get_cursor_pos().1 as i32;
+                    match button {
+                        glfw::MouseButtonLeft => {
+                            if action == glfw::Action::Press {
+                                let x = self.window.get_cursor_pos().0 as i32;
+                                let y = self.window.get_cursor_pos().1 as i32;
 
-                            game.right_click(x, y);
-                            info!("Flagged tile at ({}, {})", x, y);
-                        } 
+                                game.left_click(x, y);
+                                info!("Clicked tile at ({}, {})", x, y);
+                            }
+                        },
+                        glfw::MouseButtonRight => {
+                            if action == glfw::Action::Press {
+                                let x = self.window.get_cursor_pos().0 as i32;
+                                let y = self.window.get_cursor_pos().1 as i32;
+
+                                game.right_click(x, y);
+                            }
+                        },
+                        _ => {}
                     }
                 },
                 _ => {}

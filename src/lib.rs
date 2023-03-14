@@ -8,11 +8,13 @@ pub mod graphics;
 pub mod game;
 
 
-pub const WIDTH: i32 = 40;
-pub const HEIGHT: i32 = 40;
+pub const WIDTH: i32 = 10;
+pub const HEIGHT: i32 = 10;
 
 pub const WIDTH_PX: i32 = 800;
 pub const HEIGHT_PX: i32 = 800;
+
+pub const MINE_COUNT: i32 = WIDTH * HEIGHT / 5;
 
 pub fn clear_draw(r: f32, g: f32, b: f32, a: f32) {
     unsafe {

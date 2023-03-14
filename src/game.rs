@@ -1,11 +1,16 @@
-use crate::{WIDTH_PX, HEIGHT_PX};
+use crate::{HEIGHT_PX, MINE_COUNT, WIDTH_PX};
 
-use self::game_textures::GameTextures;
+use self::{
+    game_textures::GameTextures,
+    tile::{TileState, TileType},
+};
 
-pub mod tile;
 pub mod game_textures;
+pub mod tile;
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GameState {
+    Start,
     Playing,
     Won,
     Lost,
@@ -15,6 +20,7 @@ pub struct Game {
     pub tiles: Vec<Vec<tile::Tile>>,
     pub width: i32,
     pub height: i32,
+    pub game_state: GameState,
 }
 
 impl Game {
@@ -29,67 +35,148 @@ impl Game {
             tiles.push(row);
         }
 
-        // test every tile state
-        // tiles[0][0].tile_state = tile::TileState::Unrevealed;
-        // tiles[0][1].tile_state = tile::TileState::Revealed;
-        // tiles[0][2].tile_state = tile::TileState::Revealed;
-        // tiles[0][3].tile_state = tile::TileState::Revealed;
-        // tiles[0][4].tile_state = tile::TileState::Revealed;
-        // tiles[0][5].tile_state = tile::TileState::Revealed;
-        // tiles[0][6].tile_state = tile::TileState::Revealed;
-        // tiles[0][7].tile_state = tile::TileState::Revealed;
-        // tiles[0][8].tile_state = tile::TileState::Revealed;
-        // tiles[0][9].tile_state = tile::TileState::Revealed;
-        // tiles[0][10].tile_state = tile::TileState::Revealed;
-        // tiles[0][11].tile_state = tile::TileState::Flagged;
-        // tiles[0][12].tile_state = tile::TileState::Exploded;
-
-        // tiles[0][1].tile_type = tile::TileType::Bomb;
-        // tiles[0][2].tile_type = tile::TileType::Empty(0);
-        // tiles[0][3].tile_type = tile::TileType::Empty(1);
-        // tiles[0][4].tile_type = tile::TileType::Empty(2);
-        // tiles[0][5].tile_type = tile::TileType::Empty(3);
-        // tiles[0][6].tile_type = tile::TileType::Empty(4);
-        // tiles[0][7].tile_type = tile::TileType::Empty(5);
-        // tiles[0][8].tile_type = tile::TileType::Empty(6);
-        // tiles[0][9].tile_type = tile::TileType::Empty(7);
-        // tiles[0][10].tile_type = tile::TileType::Empty(8);
-        
-
         Game {
             tiles,
             width,
-            height
+            height,
+            game_state: GameState::Start,
         }
     }
 
-    pub fn get_tile(&self, x: usize, y: usize) -> &tile::Tile {
-        &self.tiles[y][x]
+    pub fn place_mines(&mut self, start_x: usize, start_y: usize) {
+        let mut mines = 0;
+        while mines < MINE_COUNT {
+            let x = rand::random::<usize>() % self.width as usize;
+            let y = rand::random::<usize>() % self.height as usize;
+
+            if x >= start_x - 1 && x <= start_x + 1 && y >= start_y - 1 && y <= start_y + 1 {
+                continue;
+            }
+
+            if self.tiles[y][x].is_bomb() {
+                continue;
+            }
+
+            self.tiles[y][x].tile_type = TileType::Bomb;
+            mines += 1;
+        }
+        self.game_state = GameState::Playing;
+        self.place_numbers();
+    }
+
+    pub fn place_numbers(&mut self) {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                if self.tiles[y as usize][x as usize].is_bomb() {
+                    continue;
+                }
+
+                let mut bombs = 0;
+
+                for x_offset in -1 as isize..2 {
+                    for y_offset in -1 as isize..2 {
+                        if x_offset == 0 && y_offset == 0 {
+                            continue;
+                        }
+
+                        let x = x as isize + x_offset;
+                        let y = y as isize + y_offset;
+
+                        if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                            if self.tiles[y as usize][x as usize].is_bomb() {
+                                bombs += 1;
+                            }
+                        }
+                    }
+                }
+
+                self.tiles[y as usize][x as usize].tile_type = tile::TileType::Empty(bombs);
+            }
+        }
     }
 
     pub fn reveal_tile(&mut self, x: usize, y: usize) {
-        self.tiles[y][x].reveal();
+        let tile = &mut self.tiles[y][x];
 
-        // if self.tiles[y][x].tile_type == tile::TileType::Empty(0) {
-        //     for x in -1 as isize..2 {
-        //         for y in -1 as isize..2 {
-        //             if x == 0 && y == 0 {
-        //                 continue;
-        //             }
-        //             let x = self.tiles[y as usize][x as usize].x + x;
-        //             let y = self.tiles[y as usize][x as usize].y + y;
-        //             if x >= 0 && x < self.width && y >= 0 && y < self.height {
-        //                 if self.tiles[y as usize][x as usize].tile_state == tile::TileState::Unrevealed {
-        //                     self.reveal_tile(x as usize, y as usize);
-        //                 }
-        //             }
-        //         }
-        //     }
+        match tile.tile_state {
+            TileState::Unrevealed => match tile.tile_type {
+                TileType::Bomb => {
+                    tile.tile_state = TileState::Exploded;
+                    self.reveal_all();
+                    return;
+                }
+                TileType::Empty(0) => {
+                    tile.reveal();
+                    for x_offset in -1 as isize..2 {
+                        for y_offset in -1 as isize..2 {
+                            if x_offset == 0 && y_offset == 0 {
+                                continue;
+                            }
+
+                            let x = x as isize + x_offset;
+                            let y = y as isize + y_offset;
+
+                            if x >= 0
+                                && x < self.width as isize
+                                && y >= 0
+                                && y < self.height as isize
+                            {
+                                self.reveal_tile(x as usize, y as usize);
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    tile.reveal();
+                    return;
+                }
+            },
+            _ => return,
+        }
+        // if self.is_won() {
+        //     self.reveal_all();
         // }
     }
 
     pub fn flag_tile(&mut self, x: usize, y: usize) {
         self.tiles[y][x].toggle_flag();
+    }
+
+    pub fn reveal_all(&mut self) {
+        for row in &mut self.tiles {
+            for tile in row {
+                match tile.tile_state {
+                    TileState::Unrevealed => tile.reveal(),
+                    TileState::Exploded => (),
+                    TileState::Flagged => (),
+                    TileState::Revealed => (),
+                }
+            }
+        }
+    }
+
+    pub fn left_click(&mut self, x_px: i32, y_px: i32) {
+        let (x, y) = tile_position(x_px, y_px, self.width, self.height);
+
+        if x >= self.width as usize || y >= self.height as usize {
+            return;
+        }
+        
+        if self.game_state == GameState::Start {
+            self.place_mines(x, y);
+        }
+
+        self.reveal_tile(x, y);
+    }
+
+    pub fn right_click(&mut self, x_px: i32, y_px: i32) {
+        let (x, y) = tile_position(x_px, y_px, self.width, self.height);
+        
+        if x >= self.width as usize || y >= self.height as usize {
+            return;
+        }
+        
+        self.flag_tile(x, y);
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {
@@ -99,13 +186,12 @@ impl Game {
             }
         }
     }
+}
 
-    pub fn right_click(&mut self, x_px: i32, y_px: i32) {
-        let x = x_px as f32 / (WIDTH_PX as f32 / self.width as f32);
-        let y = y_px as f32 / (HEIGHT_PX as f32 / self.height as f32);
-        let y = self.height as f32 - y;
+fn tile_position(x_px: i32, y_px: i32, width_tiles: i32, heigh_tiles: i32) -> (usize, usize) {
+    let x = x_px as f32 / (WIDTH_PX as f32 / heigh_tiles as f32);
+    let y = y_px as f32 / (HEIGHT_PX as f32 / width_tiles as f32);
+    let y = heigh_tiles as f32 - y;
 
-        self.flag_tile(x as usize, y as usize);
-    }
-
+    (x as usize, y as usize)
 }
