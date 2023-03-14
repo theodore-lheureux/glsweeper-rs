@@ -2,22 +2,27 @@ use std::ptr;
 
 use gl::types::{GLfloat, GLsizei};
 
-use crate::graphics::{gl_wrapper::{VAO, VBO, EBO, VertexAttribute}, texture::Texture};
+use crate::graphics::gl_wrapper::{VAO, VBO, EBO, VertexAttribute};
+
+use super::game_textures::GameTextures;
 
 const INDICES: [u32; 6] = [
     0, 1, 2, // first triangle
     1, 2, 3, // second triangle
 ];
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TileType {
     Bomb,
     Empty(u8),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TileState {
     Unrevealed,
     Revealed,
     Flagged,
+    Exploded,
 }
 
 pub struct Tile {
@@ -88,13 +93,17 @@ impl Tile {
         self.tile_state = TileState::Unrevealed;
     }
 
-    pub fn draw(&self, unrevealed_tile: &mut Texture, flag: &mut Texture) {
+    pub fn draw(&self, textures: &mut GameTextures) {
         self.vao.bind();
 
-        if self.is_flagged() {
-            flag.bind(0);
-        } else {
-            unrevealed_tile.bind(0);
+        match self.tile_state {
+            TileState::Unrevealed => textures.tile_unrevealed.bind(0),
+            TileState::Revealed => match self.tile_type {
+                TileType::Bomb => textures.mine_revealed.bind(0),
+                TileType::Empty(n) => textures.tile_revealed[n as usize].bind(0),
+            },
+            TileState::Flagged => textures.flag.bind(0),
+            TileState::Exploded => textures.mine_exploded.bind(0),
         }
 
         unsafe {

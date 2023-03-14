@@ -29,7 +29,6 @@ impl Window {
         window.set_resizable(false);
         window.set_cursor_pos_polling(true);
         window.set_cursor_mode(glfw::CursorMode::Normal);
-        // poll for clicks
         window.set_mouse_button_polling(true);
 
         Window {

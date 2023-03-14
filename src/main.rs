@@ -1,10 +1,8 @@
-use std::path::Path;
-
 use glsweeper_rs::{
     clear_draw,
-    game::Game,
-    graphics::{shader::Shader, texture::Texture, window::Window},
-    logger,
+    game::{Game, game_textures::{GameTextures}},
+    graphics::{shader::Shader, window::Window},
+    logger
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,9 +13,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     window.init_gl();
 
     let tile_shader = Shader::new("shaders/tile.vs", "shaders/tile.fs");
+    let mut textures = GameTextures::new();
     
-    let mut texture_unrevealed_tile = Texture::new(Path::new("textures/tile_unrevealed.png"), 0);
-    let mut texture_flag = Texture::new(Path::new("textures/flag.png"), 0);
     
     let mut current_game = Game::new(glsweeper_rs::WIDTH, glsweeper_rs::HEIGHT);
 
@@ -25,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     while !window.should_close() {
         clear_draw(0.2, 0.3, 0.3, 1.0);
-        current_game.draw(&mut texture_unrevealed_tile, &mut texture_flag);
+        current_game.draw(&mut textures);
         window.update(&mut current_game);
     }
 
