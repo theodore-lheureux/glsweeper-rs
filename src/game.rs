@@ -131,66 +131,8 @@ impl Game {
                     tile.reveal();
                     return;
                 }
-            },
-            TileState::Revealed => {
-                let bomb_count = match tile.tile_type {
-                    TileType::Empty(bombs) => match bombs {
-                        0 => return,
-                        _ => bombs,
-                    },
-                    _ => return,
-                };
-
-                let mut flags = 0;
-                for x_offset in -1 as isize..2 {
-                    for y_offset in -1 as isize..2 {
-                        if x_offset == 0 && y_offset == 0 {
-                            continue;
-                        }
-
-                        let x = x as isize + x_offset;
-                        let y = y as isize + y_offset;
-
-                        if x >= 0
-                            && x < self.width as isize
-                            && y >= 0
-                            && y < self.height as isize
-                            && self.tiles[y as usize][x as usize].tile_state == TileState::Flagged
-                        {
-                            flags += 1;
-                        }
-                    }
-                }
-
-                if flags == bomb_count {
-                    for x_offset in -1 as isize..2 {
-                        for y_offset in -1 as isize..2 {
-                            if x_offset == 0 && y_offset == 0 {
-                                continue;
-                            }
-
-                            let x = x as isize + x_offset;
-                            let y = y as isize + y_offset;
-
-                            if x >= 0
-                                && x < self.width as isize
-                                && y >= 0
-                                && y < self.height as isize
-                            {
-                                let tile = &mut self.tiles[y as usize][x as usize];
-                                if tile.tile_state == TileState::Unrevealed {
-                                    self.reveal_tile(x as usize, y as usize);
-                                }
-                            }
-                        }
-                    }
-                }   
             }
             _ => return,
-        }
-        if self.is_won() {
-            self.reveal_all();
-            self.game_state = GameState::Won;
         }
     }
 
@@ -212,11 +154,74 @@ impl Game {
     pub fn reveal_all(&mut self) {
         for row in &mut self.tiles {
             for tile in row {
-                match tile.tile_state {
-                    TileState::Unrevealed => tile.reveal(),
-                    TileState::Exploded => (),
-                    TileState::Flagged => (),
-                    TileState::Revealed => (),
+                match tile.tile_type {
+                    TileType::Bomb => {
+                        if tile.tile_state != TileState::Exploded {
+                            tile.tile_state = TileState::Revealed;
+                        }
+                    }
+                    _ => (),
+                }
+            }
+        }
+    }
+
+    fn revealed_clicked(&mut self, x: usize, y: usize) {
+        let tile = &mut self.tiles[y][x];
+
+        if !tile.is_revealed() {
+            return;
+        }
+
+        let bomb_count = match tile.tile_type {
+            TileType::Empty(bombs) => match bombs {
+                0 => return,
+                _ => bombs,
+            },
+            _ => return,
+        };
+
+        let mut flags = 0;
+        for x_offset in -1 as isize..2 {
+            for y_offset in -1 as isize..2 {
+                if x_offset == 0 && y_offset == 0 {
+                    continue;
+                }
+
+                let x = x as isize + x_offset;
+                let y = y as isize + y_offset;
+
+                if x >= 0
+                    && x < self.width as isize
+                    && y >= 0
+                    && y < self.height as isize
+                    && self.tiles[y as usize][x as usize].tile_state == TileState::Flagged
+                {
+                    flags += 1;
+                }
+            }
+        }
+
+        if flags == bomb_count {
+            for x_offset in -1 as isize..2 {
+                for y_offset in -1 as isize..2 {
+                    if x_offset == 0 && y_offset == 0 {
+                        continue;
+                    }
+
+                    let x = x as isize + x_offset;
+                    let y = y as isize + y_offset;
+
+                    if x >= 0
+                        && x < self.width as isize
+                        && y >= 0
+                        && y < self.height as isize
+                    {
+                        let tile = &mut self.tiles[y as usize][x as usize];
+                        if tile.tile_state == TileState::Unrevealed {
+                            self.reveal_tile(x as usize, y as usize);
+                        }
+                    }
                 }
             }
         }
@@ -229,11 +234,19 @@ impl Game {
             return;
         }
 
-        if self.game_state == GameState::Start {
-            self.place_mines(x, y);
+        match self.game_state {
+            GameState::Start => {
+                self.place_mines(x, y);
+                self.reveal_tile(x, y);
+            }
+            GameState::Playing => {
+                self.revealed_clicked(x, y);
+                self.reveal_tile(x, y);
+                self.check_for_win();
+            }
+            GameState::Won => (),
+            GameState::Lost => (),
         }
-
-        self.reveal_tile(x, y);
     }
 
     pub fn right_click(&mut self, x_px: i32, y_px: i32) {
@@ -243,7 +256,46 @@ impl Game {
             return;
         }
 
-        self.flag_tile(x, y);
+        match self.game_state {
+            GameState::Playing | GameState::Start => self.flag_tile(x, y),
+            _ => (),
+        }
+    }
+
+    pub fn space_click(&mut self, x_px: i32, y_px: i32) {
+        let (x, y) = tile_position(x_px, y_px, self.width, self.height);
+
+        if x >= self.width as usize || y >= self.height as usize {
+            return;
+        }
+
+        let tile = &mut self.tiles[y][x];
+
+        match self.game_state {
+            GameState::Playing | GameState::Start => (),
+            _ => return,
+        }
+        match tile.tile_state {
+            TileState::Revealed => {
+                self.revealed_clicked(x, y);
+                self.check_for_win();
+            }
+            TileState::Unrevealed | TileState::Flagged => self.flag_tile(x, y),
+            _ => (),
+        }
+    }
+
+    pub fn check_for_win(&mut self) {
+        if self.is_won() {
+            self.game_state = GameState::Won;
+            for row in &mut self.tiles {
+                for tile in row {
+                    if tile.tile_type == TileType::Bomb {
+                        tile.tile_state = TileState::Flagged;
+                    }
+                }
+            }
+        }
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {

@@ -86,6 +86,12 @@ impl Window {
                 WindowEvent::Key(Key::R, _, Action::Press, _) => {
                     *game = Game::new(WIDTH, HEIGHT);
                 },
+                WindowEvent::Key(Key::Space, _, Action::Press, _) => {
+                    let x_px = self.window.get_cursor_pos().0 as i32;
+                    let y_px = self.window.get_cursor_pos().1 as i32;
+
+                    game.space_click(x_px, y_px);
+                },
                 WindowEvent::MouseButton(button, action, _) => {
                     match button {
                         glfw::MouseButtonLeft => {
