@@ -112,7 +112,7 @@ impl Game {
     fn reveal_tile(&mut self, x: usize, y: usize) {
         let tile = &mut self.tiles[y][x];
 
-        if tile.is_revealed() {
+        if tile.is_revealed() || tile.is_flagged() {
             return;
         }
         match tile.tile_type {
@@ -198,7 +198,7 @@ impl Game {
     fn revealed_clicked(&mut self, x: usize, y: usize) {
         let tile = &mut self.tiles[y][x];
 
-        if !tile.is_revealed() {
+        if !tile.is_revealed() || tile.is_flagged() {
             return;
         }
 
@@ -224,8 +224,7 @@ impl Game {
                     && x < self.width as isize
                     && y >= 0
                     && y < self.height as isize
-                    && self.tiles[y as usize][x as usize].tile_state
-                        == TileState::Flagged
+                    && self.tiles[y as usize][x as usize].is_flagged()
                 {
                     flags += 1;
                 }
@@ -248,7 +247,7 @@ impl Game {
                         && y < self.height as isize
                     {
                         let tile = &mut self.tiles[y as usize][x as usize];
-                        if tile.tile_state == TileState::Unrevealed {
+                        if !tile.is_revealed(){
                             self.reveal_tile(x as usize, y as usize);
                         }
                     }
@@ -286,9 +285,8 @@ impl Game {
             return;
         }
 
-        match self.game_state {
-            GameState::Playing | GameState::Start => self.flag_tile(x, y),
-            _ => (),
+        if self.game_state == GameState::Start || self.game_state == GameState::Playing {
+            self.flag_tile(x, y);
         }
     }
 
