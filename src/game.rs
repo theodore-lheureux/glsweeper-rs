@@ -146,7 +146,7 @@ impl Game {
         self.tiles
             .iter()
             .flatten()
-            .all(|tile| tile.is_bomb() || tile.is_revealed())
+            .all(|tile| tile.is_revealed() && !tile.is_flagged() || tile.is_bomb())
     }
 
     fn check_for_win(&mut self) {
