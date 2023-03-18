@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use glsweeper_rs::{
     clear_draw,
     game::{game_textures::GameTextures, Game},
