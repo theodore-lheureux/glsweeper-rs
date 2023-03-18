@@ -14,7 +14,10 @@ pub struct GameTextures {
 impl GameTextures {
     pub fn new() -> Self {
         GameTextures {
-            tile_unrevealed: Texture::new(Path::new("textures/tile_unrevealed.png"), 0),
+            tile_unrevealed: Texture::new(
+                Path::new("textures/tile_unrevealed.png"),
+                0,
+            ),
             tile_revealed: vec![
                 Texture::new(Path::new("textures/tile_revealed_0.png"), 0),
                 Texture::new(Path::new("textures/tile_revealed_1.png"), 0),
@@ -28,8 +31,14 @@ impl GameTextures {
             ],
             flag: Texture::new(Path::new("textures/flag.png"), 0),
             flag_wrong: Texture::new(Path::new("textures/flag_wrong.png"), 0),
-            mine_exploded: Texture::new(Path::new("textures/mine_exploded.png"), 0),
-            mine_revealed: Texture::new(Path::new("textures/mine_revealed.png"), 0),
+            mine_exploded: Texture::new(
+                Path::new("textures/mine_exploded.png"),
+                0,
+            ),
+            mine_revealed: Texture::new(
+                Path::new("textures/mine_revealed.png"),
+                0,
+            ),
         }
     }
 }

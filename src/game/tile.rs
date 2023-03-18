@@ -33,8 +33,15 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub fn new(tile_type: TileType, x: i32, y: i32, game_width: i32, game_height: i32) -> Self {
-        let vao = generate_tile_vao(x, y, game_width as f32, game_height as f32);
+    pub fn new(
+        tile_type: TileType,
+        x: i32,
+        y: i32,
+        game_width: i32,
+        game_height: i32,
+    ) -> Self {
+        let vao =
+            generate_tile_vao(x, y, game_width as f32, game_height as f32);
 
         Tile {
             tile_type,
@@ -86,7 +93,9 @@ impl Tile {
             TileState::Unrevealed => textures.tile_unrevealed.bind(0),
             TileState::Revealed => match self.tile_type {
                 TileType::Bomb => textures.mine_revealed.bind(0),
-                TileType::Empty(n) => textures.tile_revealed[n as usize].bind(0),
+                TileType::Empty(n) => {
+                    textures.tile_revealed[n as usize].bind(0)
+                }
             },
             TileState::Flagged => textures.flag.bind(0),
             TileState::WrongFlag => textures.flag_wrong.bind(0),
@@ -136,8 +145,11 @@ fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
     ebo.bind();
     ebo.bind_buffer_data(&INDICES);
 
+    let vertex_position: VertexAttribute;
+    let vertex_texture: VertexAttribute;
+
     unsafe {
-        let vertex_position = VertexAttribute::new(
+        vertex_position = VertexAttribute::new(
             0,
             2,
             gl::FLOAT,
@@ -145,9 +157,11 @@ fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
             4 * std::mem::size_of::<GLfloat>() as GLsizei,
             ptr::null(),
         );
-        vertex_position.enable();
+    }
+    vertex_position.enable();
 
-        let vertex_texture = VertexAttribute::new(
+    unsafe {
+        vertex_texture = VertexAttribute::new(
             1,
             2,
             gl::FLOAT,
@@ -155,8 +169,8 @@ fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
             4 * std::mem::size_of::<GLfloat>() as GLsizei,
             (2 * std::mem::size_of::<GLfloat>()) as *const _,
         );
-        vertex_texture.enable();
     }
+    vertex_texture.enable();
 
     vao.unbind();
     vbo.unbind();

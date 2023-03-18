@@ -8,13 +8,15 @@ pub struct Shader {
 
 impl Shader {
     pub fn new(vertex_path: &str, fragment_path: &str) -> Self {
-        let vertex_code =
-            fs::read_to_string(vertex_path).expect("Failed to read vertex shader file.");
-        let fragment_code =
-            fs::read_to_string(fragment_path).expect("Failed to read fragment shader file.");
+        let vertex_code = fs::read_to_string(vertex_path)
+            .expect("Failed to read vertex shader file.");
+        let fragment_code = fs::read_to_string(fragment_path)
+            .expect("Failed to read fragment shader file.");
 
-        let vertex_shader = Self::compile_shader(vertex_code.as_str(), gl::VERTEX_SHADER);
-        let fragment_shader = Self::compile_shader(fragment_code.as_str(), gl::FRAGMENT_SHADER);
+        let vertex_shader =
+            Self::compile_shader(vertex_code.as_str(), gl::VERTEX_SHADER);
+        let fragment_shader =
+            Self::compile_shader(fragment_code.as_str(), gl::FRAGMENT_SHADER);
 
         let id = Self::link_program(vertex_shader, fragment_shader);
 

@@ -41,7 +41,9 @@ impl Window {
 
     pub fn init_gl(&mut self) {
         self.window.make_current();
-        gl::load_with(|symbol| self.window.get_proc_address(symbol) as *const _);
+        gl::load_with(|symbol| {
+            self.window.get_proc_address(symbol) as *const _
+        });
         unsafe {
             gl::Viewport(
                 0,

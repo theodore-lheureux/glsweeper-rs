@@ -29,7 +29,13 @@ impl Game {
         for r in 0..height {
             let mut row = Vec::new();
             for c in 0..width {
-                let tile = tile::Tile::new(tile::TileType::Empty(0), c, r, width, height);
+                let tile = tile::Tile::new(
+                    tile::TileType::Empty(0),
+                    c,
+                    r,
+                    width,
+                    height,
+                );
                 row.push(tile);
             }
             tiles.push(row);
@@ -49,7 +55,11 @@ impl Game {
             let x = rand::random::<usize>() % self.width as usize;
             let y = rand::random::<usize>() % self.height as usize;
 
-            if x >= start_x - 1 && x <= start_x + 1 && y >= start_y - 1 && y <= start_y + 1 {
+            if x >= start_x - 1
+                && x <= start_x + 1
+                && y >= start_y - 1
+                && y <= start_y + 1
+            {
                 continue;
             }
 
@@ -93,7 +103,8 @@ impl Game {
                     }
                 }
 
-                self.tiles[y as usize][x as usize].tile_type = tile::TileType::Empty(bombs);
+                self.tiles[y as usize][x as usize].tile_type =
+                    tile::TileType::Empty(bombs);
             }
         }
     }
@@ -121,7 +132,11 @@ impl Game {
                         let x = x as isize + x_offset;
                         let y = y as isize + y_offset;
 
-                        if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                        if x >= 0
+                            && x < self.width as isize
+                            && y >= 0
+                            && y < self.height as isize
+                        {
                             self.reveal_tile(x as usize, y as usize);
                         }
                     }
@@ -134,7 +149,9 @@ impl Game {
     fn is_won(&self) -> bool {
         for row in &self.tiles {
             for tile in row {
-                if tile.tile_type != TileType::Bomb && tile.tile_state != TileState::Revealed {
+                if tile.tile_type != TileType::Bomb
+                    && tile.tile_state != TileState::Revealed
+                {
                     return false;
                 }
             }
@@ -207,7 +224,8 @@ impl Game {
                     && x < self.width as isize
                     && y >= 0
                     && y < self.height as isize
-                    && self.tiles[y as usize][x as usize].tile_state == TileState::Flagged
+                    && self.tiles[y as usize][x as usize].tile_state
+                        == TileState::Flagged
                 {
                     flags += 1;
                 }
@@ -224,7 +242,11 @@ impl Game {
                     let x = x as isize + x_offset;
                     let y = y as isize + y_offset;
 
-                    if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                    if x >= 0
+                        && x < self.width as isize
+                        && y >= 0
+                        && y < self.height as isize
+                    {
                         let tile = &mut self.tiles[y as usize][x as usize];
                         if tile.tile_state == TileState::Unrevealed {
                             self.reveal_tile(x as usize, y as usize);
@@ -302,7 +324,12 @@ impl Game {
     }
 }
 
-fn tile_position(x_px: i32, y_px: i32, width_tiles: i32, heigh_tiles: i32) -> (usize, usize) {
+fn tile_position(
+    x_px: i32,
+    y_px: i32,
+    width_tiles: i32,
+    heigh_tiles: i32,
+) -> (usize, usize) {
     let x = x_px as f32 / (WIDTH_PX as f32 / heigh_tiles as f32);
     let y = y_px as f32 / (HEIGHT_PX as f32 / width_tiles as f32);
     let y = heigh_tiles as f32 - y;
