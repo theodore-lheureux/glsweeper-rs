@@ -20,7 +20,7 @@ pub struct Game {
     pub tiles: Vec<Vec<tile::Tile>>,
     pub width: usize,
     pub height: usize,
-    pub game_state: GameState,
+    pub state: GameState,
 }
 
 impl Game {
@@ -45,7 +45,7 @@ impl Game {
             tiles,
             width,
             height,
-            game_state: GameState::Start,
+            state: GameState::Start,
         }
     }
 
@@ -69,7 +69,7 @@ impl Game {
             self.tiles[y][x].tile_type = TileType::Bomb;
             mines += 1;
         }
-        self.game_state = GameState::Playing;
+        self.state = GameState::Playing;
         self.place_numbers();
     }
 
@@ -101,7 +101,7 @@ impl Game {
             TileType::Bomb => {
                 tile.tile_state = TileState::Exploded;
                 self.reveal_all();
-                self.game_state = GameState::Lost;
+                self.state = GameState::Lost;
             }
             TileType::Empty(0) => {
                 tile.reveal();
@@ -157,7 +157,7 @@ impl Game {
         if !self.is_won() {
             return;
         }
-        self.game_state = GameState::Won;
+        self.state = GameState::Won;
         self.tiles
             .iter_mut()
             .flatten()
@@ -243,6 +243,14 @@ impl Game {
         tiles
     }
 
+    pub fn count_flags(&self) -> usize {
+        self.tiles
+            .iter()
+            .flatten()
+            .filter(|tile| tile.is_flagged())
+            .count()
+    }
+
     pub fn left_click(&mut self, x_px: i32, y_px: i32) {
         let (x, y) = tile_position(x_px, y_px, self.width, self.height);
 
@@ -250,7 +258,7 @@ impl Game {
             return;
         }
 
-        match self.game_state {
+        match self.state {
             GameState::Start => {
                 self.place_mines(x, y);
                 self.reveal_tile(x, y);
@@ -272,8 +280,8 @@ impl Game {
             return;
         }
 
-        if self.game_state == GameState::Start
-            || self.game_state == GameState::Playing
+        if self.state == GameState::Start
+            || self.state == GameState::Playing
         {
             self.flag_tile(x, y);
         }
@@ -288,7 +296,7 @@ impl Game {
 
         let tile = &mut self.tiles[y][x];
 
-        match self.game_state {
+        match self.state {
             GameState::Playing | GameState::Start => (),
             _ => return,
         }

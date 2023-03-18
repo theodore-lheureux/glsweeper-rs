@@ -2,7 +2,7 @@ use glfw::{Action, Context, Key, WindowEvent};
 use log::info;
 use std::sync::mpsc::Receiver;
 
-use crate::{game::Game, HEIGHT, WIDTH};
+use crate::{game::Game, HEIGHT, WIDTH, MINE_COUNT};
 
 pub struct Window {
     pub glfw: glfw::Glfw,
@@ -114,6 +114,22 @@ impl Window {
                 },
                 _ => {}
             }
+
+            match game.state {
+                crate::game::GameState::Won => {
+                    self.window.set_title("Minesweeper | You won!");
+                }
+                crate::game::GameState::Lost => {
+                    self.window.set_title("Minesweeper | You lost!");
+                }
+                _ => {
+                    self.window.set_title(&format!(
+                        "Minesweeper | {} mines left",
+                        MINE_COUNT as isize - game.count_flags() as isize
+                    ));
+                }
+            }
+
         }
     }
 
