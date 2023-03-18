@@ -26,27 +26,31 @@ pub enum TileState {
     WrongFlag,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Tile {
     pub tile_type: TileType,
     pub tile_state: TileState,
     pub vao: VAO,
+    pub x: usize,
+    pub y: usize,
 }
 
 impl Tile {
     pub fn new(
         tile_type: TileType,
-        x: i32,
-        y: i32,
-        game_width: i32,
-        game_height: i32,
+        x: usize,
+        y: usize,
+        game_width: usize,
+        game_height: usize,
     ) -> Self {
-        let vao =
-            generate_tile_vao(x, y, game_width as f32, game_height as f32);
+        let vao = generate_tile_vao(x, y, game_width, game_height);
 
         Tile {
             tile_type,
             tile_state: TileState::Unrevealed,
             vao,
+            x,
+            y,
         }
     }
 
@@ -63,11 +67,15 @@ impl Tile {
     }
 
     pub fn is_revealed(&self) -> bool {
-        matches!(self.tile_state, TileState::Revealed)
+        matches!(self.tile_state, TileState::Revealed | TileState::Flagged)
     }
 
     pub fn is_flagged(&self) -> bool {
         matches!(self.tile_state, TileState::Flagged)
+    }
+
+    pub fn is_exploded(&self) -> bool {
+        matches!(self.tile_state, TileState::Exploded)
     }
 
     pub fn reveal(&mut self) {
@@ -108,17 +116,17 @@ impl Tile {
     }
 }
 
-fn generate_tile_vao(x: i32, y: i32, width: f32, height: f32) -> VAO {
+fn generate_tile_vao(x: usize, y: usize, width: usize, height: usize) -> VAO {
     let vao = VAO::new();
     vao.bind();
 
     let vbo = VBO::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW);
     vbo.bind();
 
-    let x = (x as f32 / width) * 2.0 - 1.0;
-    let y = (y as f32 / height) * 2.0 - 1.0;
+    let x = (x as f32 / width as f32) * 2.0 - 1.0;
+    let y = (y as f32 / height as f32) * 2.0 - 1.0;
 
-    let tile_size = 2.0 / width;
+    let tile_size = 2.0 / width as f32;
 
     let tile: [f32; 16] = [
         x,

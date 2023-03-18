@@ -2,6 +2,7 @@ use std::ffi::c_void;
 
 use gl::types::{GLboolean, GLenum, GLfloat, GLsizei};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VAO {
     id: gl::types::GLuint,
 }
