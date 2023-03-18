@@ -9,8 +9,8 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(path: &Path, unit: u32) -> Self {
-        let img = image::open(path).expect("Failed to load texture image.");
+    pub fn new(image_file: Vec<u8>, unit: u32) -> Self {
+        let img = image::load_from_memory(&image_file).expect("Failed to load texture image.");
         let rgba = img.into_rgba8();
         let (width, height) = rgba.dimensions();
 
