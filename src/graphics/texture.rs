@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use image::EncodableLayout;
 use log::info;
 

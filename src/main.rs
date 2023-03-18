@@ -15,7 +15,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     window.init_gl();
 
-    let tile_shader = Shader::new("shaders/tile.vs", "shaders/tile.fs");
+    let vs_code: String = String::from_utf8(include_bytes!("../shaders/tile.vs").to_vec())?;
+    let fs_code: String = String::from_utf8(include_bytes!("../shaders/tile.fs").to_vec())?;
+    let tile_shader = Shader::new(vs_code, fs_code);
     let mut textures = GameTextures::new();
 
     let mut current_game = Game::new(glsweeper_rs::WIDTH, glsweeper_rs::HEIGHT);

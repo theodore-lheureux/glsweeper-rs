@@ -1,4 +1,4 @@
-use std::{ffi::CString, fs};
+use std::ffi::CString;
 
 use log::info;
 
@@ -7,12 +7,7 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn new(vertex_path: &str, fragment_path: &str) -> Self {
-        let vertex_code = fs::read_to_string(vertex_path)
-            .expect("Failed to read vertex shader file.");
-        let fragment_code = fs::read_to_string(fragment_path)
-            .expect("Failed to read fragment shader file.");
-
+    pub fn new(vertex_code: String, fragment_code: String) -> Self {
         let vertex_shader =
             Self::compile_shader(vertex_code.as_str(), gl::VERTEX_SHADER);
         let fragment_shader =
