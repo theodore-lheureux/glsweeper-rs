@@ -53,6 +53,10 @@ impl Game {
         let mut mines = 0;
         while mines < MINE_COUNT {
             let (x, y) = random_coords(self.width, self.height);
+            let (start_x, start_y) = (
+                if start_x == 0 { 1 } else { start_x },
+                if start_y == 0 { 1 } else { start_y },
+            );
             let is_adjacent = x >= start_x - 1
                 && x <= start_x + 1
                 && y >= start_y - 1
@@ -90,7 +94,7 @@ impl Game {
     fn reveal_tile(&mut self, x: usize, y: usize) {
         let tile = &mut self.tiles[y][x];
 
-        if tile.is_revealed() {
+        if tile.is_revealed() || tile.is_flagged() {
             return;
         }
         match tile.tile_type {
@@ -146,7 +150,7 @@ impl Game {
         self.tiles
             .iter()
             .flatten()
-            .all(|tile| tile.is_revealed() && !tile.is_flagged() || tile.is_bomb())
+            .all(|tile| tile.is_revealed() || tile.is_bomb())
     }
 
     fn check_for_win(&mut self) {
@@ -168,7 +172,7 @@ impl Game {
     fn revealed_clicked(&mut self, x: usize, y: usize) {
         let tile = &mut self.tiles[y][x];
 
-        if !tile.is_revealed() {
+        if !tile.is_revealed() || tile.is_flagged() {
             return;
         }
 
@@ -264,7 +268,7 @@ impl Game {
     pub fn right_click(&mut self, x_px: i32, y_px: i32) {
         let (x, y) = tile_position(x_px, y_px, self.width, self.height);
 
-        if x >= self.width || y >= self.height  {
+        if x >= self.width || y >= self.height {
             return;
         }
 
@@ -321,5 +325,8 @@ fn tile_position(
 }
 
 fn random_coords(width: usize, height: usize) -> (usize, usize) {
-    (rand::random::<usize>() % width, rand::random::<usize>() % height)
+    (
+        rand::random::<usize>() % width,
+        rand::random::<usize>() % height,
+    )
 }

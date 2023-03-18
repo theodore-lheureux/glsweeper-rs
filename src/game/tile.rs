@@ -67,7 +67,7 @@ impl Tile {
     }
 
     pub fn is_revealed(&self) -> bool {
-        matches!(self.tile_state, TileState::Revealed | TileState::Flagged)
+        matches!(self.tile_state, TileState::Revealed)
     }
 
     pub fn is_flagged(&self) -> bool {
