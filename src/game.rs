@@ -134,7 +134,7 @@ impl Game {
             .flatten()
             .for_each(|tile| match tile.tile_type {
                 TileType::Bomb => {
-                    if !tile.is_exploded() {
+                    if !tile.is_exploded() && !tile.is_flagged() {
                         tile.tile_state = TileState::Revealed;
                     }
                 }
