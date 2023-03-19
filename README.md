@@ -20,14 +20,14 @@ Mines are hidden in the grid. Click on a tile to reveal it. If it is a mine, you
 ### Linux
 
 - Install GLFW (`pacman -S glfw` on Arch Linux, `apt install libglfw3-dev` on Debian/Ubuntu)
-- [Install Rust](https://rustup.rs/)
+- <a href="https://rustup.rs/" target="_blank">Install Rust</a>
 - Run `cargo build --release` or `cargo run --release`
 
 ### Windows
 
-- [Install Visual Studio](https://visualstudio.microsoft.com/fr/downloads/) with C++ support
-- [Install CMake](https://cmake.org/download/)
-- [Install Rust](https://rustup.rs/)
+- <a href="https://visualstudio.microsoft.com/fr/downloads/" target="_blank">Install Visual Studio</a> with C++ support
+- <a href="https://cmake.org/download/" target="_blank">Install CMake</a>
+- <a href="https://rustup.rs/" target="_blank">Install Rust</a>
 - Run `cargo build --release` or `cargo run --release`
 
 ### MacOS
