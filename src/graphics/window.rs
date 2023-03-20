@@ -2,7 +2,7 @@ use glfw::{Action, Context, Key, WindowEvent};
 use log::info;
 use std::sync::mpsc::Receiver;
 
-use crate::{game::Game, HEIGHT, WIDTH, MINE_COUNT};
+use crate::{game::Game, HEIGHT, MINE_COUNT, WIDTH};
 
 pub struct Window {
     pub glfw: glfw::Glfw,
@@ -39,17 +39,40 @@ impl Window {
         }
     }
 
+    pub fn set_icon(&mut self, icon_file: Vec<u8>) {
+        let icon = image::load_from_memory(&icon_file).unwrap();
+        let icon = icon.into_rgba8();
+        let (width, height) = icon.dimensions();
+        let icon = icon.into_raw();
+        let icon: Vec<u32> = icon
+            .chunks(4)
+            .map(|c| {
+                let r = c[0] as u32;
+                let g = c[1] as u32;
+                let b = c[2] as u32;
+                let a = c[3] as u32;
+                r | (g << 8) | (b << 16) | (a << 24)
+            })
+            .collect();
+
+        let icons = vec![glfw::PixelImage {
+            width,
+            height,
+            pixels: icon,
+        }];
+
+        self.window.set_icon_from_pixels(icons);
+    }
+
     pub fn init_gl(&mut self) {
         self.window.make_current();
-        gl::load_with(|symbol| {
-            self.window.get_proc_address(symbol) as *const _
-        });
+        gl::load_with(|symbol| self.window.get_proc_address(symbol) as *const _);
         unsafe {
             gl::Viewport(
                 0,
                 0,
-                self.window.get_framebuffer_size().0 as i32,
-                self.window.get_framebuffer_size().1 as i32,
+                self.window.get_framebuffer_size().0,
+                self.window.get_framebuffer_size().1,
             );
             gl::Enable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
@@ -129,7 +152,6 @@ impl Window {
                     ));
                 }
             }
-
         }
     }
 

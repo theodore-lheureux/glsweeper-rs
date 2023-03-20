@@ -101,9 +101,7 @@ impl Tile {
             TileState::Unrevealed => textures.tile_unrevealed.bind(0),
             TileState::Revealed => match self.tile_type {
                 TileType::Bomb => textures.mine_revealed.bind(0),
-                TileType::Empty(n) => {
-                    textures.tile_revealed[n as usize].bind(0)
-                }
+                TileType::Empty(n) => textures.tile_revealed[n as usize].bind(0),
             },
             TileState::Flagged => textures.flag.bind(0),
             TileState::WrongFlag => textures.flag_wrong.bind(0),

@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         glsweeper_rs::HEIGHT_PX as u32,
         "GL Sweeper",
     );
+    window.set_icon(include_bytes!("../icon.png").to_vec());
     window.init_gl();
 
     let vs_code: String = String::from_utf8(include_bytes!("../shaders/tile.vs").to_vec())?;

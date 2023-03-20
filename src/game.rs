@@ -29,13 +29,7 @@ impl Game {
         for r in 0..height {
             let mut row = Vec::new();
             for c in 0..width {
-                let tile = tile::Tile::new(
-                    tile::TileType::Empty(0),
-                    c,
-                    r,
-                    width,
-                    height,
-                );
+                let tile = tile::Tile::new(tile::TileType::Empty(0), c, r, width, height);
                 row.push(tile);
             }
             tiles.push(row);
@@ -57,10 +51,8 @@ impl Game {
                 if start_x == 0 { 1 } else { start_x },
                 if start_y == 0 { 1 } else { start_y },
             );
-            let is_adjacent = x >= start_x - 1
-                && x <= start_x + 1
-                && y >= start_y - 1
-                && y <= start_y + 1;
+            let is_adjacent =
+                x >= start_x - 1 && x <= start_x + 1 && y >= start_y - 1 && y <= start_y + 1;
 
             if is_adjacent || self.tiles[y][x].is_bomb() {
                 continue;
@@ -76,7 +68,7 @@ impl Game {
     fn place_numbers(&mut self) {
         for y in 0..self.height {
             for x in 0..self.width {
-                if self.tiles[y as usize][x as usize].is_bomb() {
+                if self.tiles[y][x].is_bomb() {
                     continue;
                 }
                 let bombs = self
@@ -85,8 +77,7 @@ impl Game {
                     .filter(|t| t.is_bomb())
                     .count() as u8;
 
-                self.tiles[y as usize][x as usize].tile_type =
-                    tile::TileType::Empty(bombs);
+                self.tiles[y][x].tile_type = tile::TileType::Empty(bombs);
             }
         }
     }
@@ -114,11 +105,7 @@ impl Game {
                         let x = x as isize + x_offset;
                         let y = y as isize + y_offset;
 
-                        if x >= 0
-                            && x < self.width as isize
-                            && y >= 0
-                            && y < self.height as isize
-                        {
+                        if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
                             self.reveal_tile(x as usize, y as usize);
                         }
                     }
@@ -203,11 +190,7 @@ impl Game {
                     let x = x as isize + x_offset;
                     let y = y as isize + y_offset;
 
-                    if x >= 0
-                        && x < self.width as isize
-                        && y >= 0
-                        && y < self.height as isize
-                    {
+                    if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
                         let tile = &mut self.tiles[y as usize][x as usize];
                         if !tile.is_revealed() {
                             self.reveal_tile(x as usize, y as usize);
@@ -230,11 +213,7 @@ impl Game {
                 let x = x as isize + x_offset;
                 let y = y as isize + y_offset;
 
-                if x >= 0
-                    && x < self.width as isize
-                    && y >= 0
-                    && y < self.height as isize
-                {
+                if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
                     tiles.push(&self.tiles[y as usize][x as usize]);
                 }
             }
@@ -280,9 +259,7 @@ impl Game {
             return;
         }
 
-        if self.state == GameState::Start
-            || self.state == GameState::Playing
-        {
+        if self.state == GameState::Start || self.state == GameState::Playing {
             self.flag_tile(x, y);
         }
     }
@@ -319,12 +296,7 @@ impl Game {
     }
 }
 
-fn tile_position(
-    x_px: i32,
-    y_px: i32,
-    width_tiles: usize,
-    heigh_tiles: usize,
-) -> (usize, usize) {
+fn tile_position(x_px: i32, y_px: i32, width_tiles: usize, heigh_tiles: usize) -> (usize, usize) {
     let x = x_px as f32 / (WIDTH_PX as f32 / heigh_tiles as f32);
     let y = y_px as f32 / (HEIGHT_PX as f32 / width_tiles as f32);
     let y = heigh_tiles as f32 - y;
