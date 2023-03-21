@@ -1,4 +1,4 @@
-use crate::{HEIGHT_PX, MINE_COUNT, WIDTH_PX};
+use crate::{HEIGHT_PX, WIDTH_PX, MAX_WIDTH, MAX_HEIGHT, WIDTH_INCREMENT, HEIGHT_INCREMENT, MIN_WIDTH, MIN_HEIGHT};
 
 use self::{
     game_textures::GameTextures,
@@ -21,6 +21,7 @@ pub struct Game {
     pub width: usize,
     pub height: usize,
     pub state: GameState,
+    pub mine_count: usize,
 }
 
 impl Game {
@@ -40,12 +41,13 @@ impl Game {
             width,
             height,
             state: GameState::Start,
+            mine_count: width * height / 5,
         }
     }
 
     fn place_mines(&mut self, start_x: usize, start_y: usize) {
         let mut mines = 0;
-        while mines < MINE_COUNT {
+        while mines < self.mine_count {
             let (x, y) = random_coords(self.width, self.height);
             let (start_x, start_y) = (
                 if start_x == 0 { 1 } else { start_x },
@@ -287,6 +289,36 @@ impl Game {
         }
     }
 
+    pub fn increase_size(&mut self) {
+        if self.state == GameState::Playing {
+            return;
+        }
+
+        let width = self.width + WIDTH_INCREMENT;
+        let height = self.height + HEIGHT_INCREMENT;
+
+        if width >= MAX_WIDTH || height >= MAX_HEIGHT {
+            return;
+        }
+
+        *self = Self::new(width + 1, height + 1);
+    }
+
+    pub fn decrease_size(&mut self) {
+        if self.state == GameState::Playing {
+            return;
+        }
+
+        let width = self.width - WIDTH_INCREMENT;
+        let height = self.height - HEIGHT_INCREMENT;
+
+        if width <= MIN_WIDTH || height <= MIN_HEIGHT {
+            return;
+        }
+
+        *self = Self::new(width - 1, height - 1);
+    }
+
     pub fn draw(&self, textures: &mut GameTextures) {
         for row in &self.tiles {
             for tile in row {
@@ -294,6 +326,7 @@ impl Game {
             }
         }
     }
+
 }
 
 fn tile_position(x_px: i32, y_px: i32, width_tiles: usize, heigh_tiles: usize) -> (usize, usize) {

@@ -2,7 +2,7 @@ use glfw::{Action, Context, Key, WindowEvent};
 use log::info;
 use std::sync::mpsc::Receiver;
 
-use crate::{game::Game, HEIGHT, MINE_COUNT, WIDTH};
+use crate::{game::Game, DEFAULT_WIDTH, DEFAULT_HEIGHT};
 
 pub struct Window {
     pub glfw: glfw::Glfw,
@@ -107,13 +107,19 @@ impl Window {
                     }
                 }
                 WindowEvent::Key(Key::R, _, Action::Press, _) => {
-                    *game = Game::new(WIDTH, HEIGHT);
+                    *game = Game::new(game.width, game.height);
                 }
                 WindowEvent::Key(Key::Space, _, Action::Press, _) => {
                     let x_px = self.window.get_cursor_pos().0 as i32;
                     let y_px = self.window.get_cursor_pos().1 as i32;
 
                     game.space_click(x_px, y_px);
+                }
+                WindowEvent::Key(Key::Equal, _, Action::Press, _) => {
+                    game.increase_size();
+                }
+                WindowEvent::Key(Key::Minus, _, Action::Press, _) => {
+                    game.decrease_size();
                 }
                 WindowEvent::MouseButton(button, action, _) => match button {
                     glfw::MouseButtonLeft => {
@@ -148,7 +154,7 @@ impl Window {
                 _ => {
                     self.window.set_title(&format!(
                         "Minesweeper | {} mines left",
-                        MINE_COUNT as isize - game.count_flags() as isize
+                        game.mine_count - game.count_flags()
                     ));
                 }
             }

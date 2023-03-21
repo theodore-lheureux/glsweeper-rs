@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tile_shader = Shader::new(vs_code, fs_code);
     let mut textures = GameTextures::new();
 
-    let mut current_game = Game::new(glsweeper_rs::WIDTH, glsweeper_rs::HEIGHT);
+    let mut current_game = Game::new(glsweeper_rs::DEFAULT_WIDTH, glsweeper_rs::DEFAULT_HEIGHT);
 
     tile_shader.use_program();
 

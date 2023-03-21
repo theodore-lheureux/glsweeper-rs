@@ -7,13 +7,19 @@ pub mod game;
 pub mod graphics;
 pub mod logger;
 
-pub const WIDTH: usize = 10;
-pub const HEIGHT: usize = 10;
+pub const DEFAULT_WIDTH: usize = 10;
+pub const DEFAULT_HEIGHT: usize = 10;
+
+pub const MAX_WIDTH: usize = 100;
+pub const MAX_HEIGHT: usize = 100;
+pub const MIN_WIDTH: usize = 5;
+pub const MIN_HEIGHT: usize = 5;
+
+pub const WIDTH_INCREMENT: usize = 1;
+pub const HEIGHT_INCREMENT: usize = 1;
 
 pub const WIDTH_PX: i32 = 800;
 pub const HEIGHT_PX: i32 = 800;
-
-pub const MINE_COUNT: usize = WIDTH * HEIGHT / 5;
 
 pub fn clear_draw(r: f32, g: f32, b: f32, a: f32) {
     unsafe {
