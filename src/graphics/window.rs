@@ -2,7 +2,7 @@ use glfw::{Action, Context, Key, WindowEvent};
 use log::info;
 use std::sync::mpsc::Receiver;
 
-use crate::{game::Game, DEFAULT_WIDTH, DEFAULT_HEIGHT};
+use crate::game::Game;
 
 pub struct Window {
     pub glfw: glfw::Glfw,

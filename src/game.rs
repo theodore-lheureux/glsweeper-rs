@@ -1,4 +1,7 @@
-use crate::{HEIGHT_PX, WIDTH_PX, MAX_WIDTH, MAX_HEIGHT, WIDTH_INCREMENT, HEIGHT_INCREMENT, MIN_WIDTH, MIN_HEIGHT};
+use crate::{
+    HEIGHT_INCREMENT, HEIGHT_PX, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
+    WIDTH_PX,
+};
 
 use self::{
     game_textures::GameTextures,
@@ -297,11 +300,11 @@ impl Game {
         let width = self.width + WIDTH_INCREMENT;
         let height = self.height + HEIGHT_INCREMENT;
 
-        if width >= MAX_WIDTH || height >= MAX_HEIGHT {
+        if width > MAX_WIDTH || height > MAX_HEIGHT {
             return;
         }
 
-        *self = Self::new(width + 1, height + 1);
+        *self = Self::new(width, height);
     }
 
     pub fn decrease_size(&mut self) {
@@ -312,11 +315,11 @@ impl Game {
         let width = self.width - WIDTH_INCREMENT;
         let height = self.height - HEIGHT_INCREMENT;
 
-        if width <= MIN_WIDTH || height <= MIN_HEIGHT {
+        if width < MIN_WIDTH || height < MIN_HEIGHT {
             return;
         }
 
-        *self = Self::new(width - 1, height - 1);
+        *self = Self::new(width, height);
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {
@@ -326,7 +329,6 @@ impl Game {
             }
         }
     }
-
 }
 
 fn tile_position(x_px: i32, y_px: i32, width_tiles: usize, heigh_tiles: usize) -> (usize, usize) {

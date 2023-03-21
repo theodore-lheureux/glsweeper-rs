@@ -7,6 +7,7 @@ pub struct VAO {
     id: gl::types::GLuint,
 }
 
+#[allow(clippy::new_without_default)]
 impl VAO {
     pub fn new() -> Self {
         let mut id = 0;
@@ -140,15 +141,19 @@ pub struct VertexAttribute {
 }
 
 impl VertexAttribute {
+    /// # Safety
+    ///
+    /// `offset` must be a offset depending on the stride of the 
+    /// VBO and the size of the other attributes.
     pub unsafe fn new(
         index: u32,
         size: i32,
         r#type: GLenum,
         normalized: GLboolean,
         stride: GLsizei,
-        pointer: *const c_void,
+        offset: *const c_void,
     ) -> Self {
-        gl::VertexAttribPointer(index, size, r#type, normalized, stride, pointer);
+        gl::VertexAttribPointer(index, size, r#type, normalized, stride, offset);
 
         VertexAttribute { index }
     }
