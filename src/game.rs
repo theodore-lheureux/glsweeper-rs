@@ -312,14 +312,14 @@ impl Game {
             return;
         }
 
-        let width = self.width - WIDTH_INCREMENT;
-        let height = self.height - HEIGHT_INCREMENT;
+        let width = self.width as isize - WIDTH_INCREMENT as isize;
+        let height = self.height as isize - HEIGHT_INCREMENT as isize;
 
-        if width < MIN_WIDTH || height < MIN_HEIGHT {
+        if width < MIN_WIDTH as isize || height < MIN_HEIGHT as isize {
             return;
         }
 
-        *self = Self::new(width, height);
+        *self = Self::new(width as usize, height as usize);
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {
