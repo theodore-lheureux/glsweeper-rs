@@ -161,14 +161,17 @@ impl Window {
         self.glfw.poll_events();
 
         match game.state {
-            GameState::Won(gameDuration) => {
-                let seconds = gameDuration.as_secs();
-                let millis = gameDuration.subsec_millis();
+            GameState::Won(game_duration) => {
+                let seconds = game_duration.as_secs();
+                let millis = game_duration.subsec_millis();
                 let time = format!("{}.{}", seconds, millis);
-                self.window.set_title("Minesweeper | You won! | You took " + &time + " seconds" ));
+                self.window.set_title(&("Minesweeper | You won! | You took ".to_owned() + &*time + " seconds"));
             }
-            GameState::Lost(gameDuration) => {
-                self.window.set_title("Minesweeper | You lost!");
+            GameState::Lost(game_duration) => {
+                let seconds = game_duration.as_secs();
+                let millis = game_duration.subsec_millis();
+                let time = format!("{}.{}", seconds, millis);
+                self.window.set_title(&("Minesweeper | You lost! | You took ".to_owned() + &*time + " seconds"));
             }
             GameState::Playing(_) => {
                 self.window.set_title(&format!(
