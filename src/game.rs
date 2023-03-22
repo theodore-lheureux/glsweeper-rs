@@ -1,3 +1,5 @@
+use std::time;
+
 use crate::{
     HEIGHT_INCREMENT, HEIGHT_PX, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
     WIDTH_PX,
@@ -11,12 +13,12 @@ use self::{
 pub mod game_textures;
 pub mod tile;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum GameState {
     Start,
-    Playing,
-    Won,
-    Lost,
+    Playing(time::Instant),
+    Won(time::Duration),
+    Lost(time::Duration),
 }
 
 pub struct Game {
@@ -66,7 +68,7 @@ impl Game {
             self.tiles[y][x].tile_type = TileType::Bomb;
             mines += 1;
         }
-        self.state = GameState::Playing;
+        self.state = GameState::Playing(time::Instant::now());
         self.place_numbers();
     }
 
@@ -97,7 +99,9 @@ impl Game {
             TileType::Bomb => {
                 tile.tile_state = TileState::Exploded;
                 self.reveal_all();
-                self.state = GameState::Lost;
+                if let GameState::Playing(start_time) = self.state {
+                    self.state = GameState::Lost(time::Instant::now() - start_time);
+                }
             }
             TileType::Empty(0) => {
                 tile.reveal();
@@ -149,7 +153,9 @@ impl Game {
         if !self.is_won() {
             return;
         }
-        self.state = GameState::Won;
+        if let GameState::Playing(start_time) = self.state {
+            self.state = GameState::Won(time::Instant::now() - start_time);
+        }
         self.tiles
             .iter_mut()
             .flatten()
@@ -247,13 +253,13 @@ impl Game {
                 self.place_mines(x, y);
                 self.reveal_tile(x, y);
             }
-            GameState::Playing => {
+            GameState::Playing(_) => {
                 self.revealed_clicked(x, y);
                 self.reveal_tile(x, y);
                 self.check_for_win();
             }
-            GameState::Won => (),
-            GameState::Lost => (),
+            GameState::Won(_) => (),
+            GameState::Lost(_) => (),
         }
     }
 
@@ -264,7 +270,7 @@ impl Game {
             return;
         }
 
-        if self.state == GameState::Start || self.state == GameState::Playing {
+        if matches!(self.state, GameState::Playing(_) | GameState::Start) {
             self.flag_tile(x, y);
         }
     }
@@ -279,7 +285,7 @@ impl Game {
         let tile = &mut self.tiles[y][x];
 
         match self.state {
-            GameState::Playing | GameState::Start => (),
+            GameState::Playing(_) | GameState::Start => (),
             _ => return,
         }
         match tile.tile_state {
@@ -293,7 +299,7 @@ impl Game {
     }
 
     pub fn increase_size(&mut self) {
-        if self.state == GameState::Playing {
+        if matches!(self.state, GameState::Playing(_)) {
             return;
         }
 
@@ -308,7 +314,7 @@ impl Game {
     }
 
     pub fn decrease_size(&mut self) {
-        if self.state == GameState::Playing {
+        if matches!(self.state, GameState::Playing(_)) {
             return;
         }
 
@@ -320,6 +326,19 @@ impl Game {
         }
 
         *self = Self::new(width as usize, height as usize);
+    }
+
+    pub fn get_time_since_start(&self) -> Option<String> {
+        match self.state {
+            GameState::Playing(start_time) => {
+                let elapsed = start_time.elapsed();
+                let seconds = elapsed.as_secs();
+                let millis = elapsed.subsec_millis();
+
+                Some(format!("{}.{:03}", seconds, millis))
+            }
+            _ => None,
+        }
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {

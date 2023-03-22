@@ -2,7 +2,7 @@ use glfw::{Action, Context, Key, WindowEvent};
 use log::info;
 use std::sync::mpsc::Receiver;
 
-use crate::game::Game;
+use crate::game::{Game, GameState};
 
 pub struct Window {
     pub glfw: glfw::Glfw,
@@ -144,20 +144,6 @@ impl Window {
                 _ => {}
             }
 
-            match game.state {
-                crate::game::GameState::Won => {
-                    self.window.set_title("Minesweeper | You won!");
-                }
-                crate::game::GameState::Lost => {
-                    self.window.set_title("Minesweeper | You lost!");
-                }
-                _ => {
-                    self.window.set_title(&format!(
-                        "Minesweeper | {} mines left",
-                        game.mine_count - game.count_flags()
-                    ));
-                }
-            }
         }
     }
 
@@ -173,6 +159,29 @@ impl Window {
         self.process_events(game);
         self.window.swap_buffers();
         self.glfw.poll_events();
+
+        match game.state {
+            GameState::Won(gameDuration) => {
+                let seconds = gameDuration.as_secs();
+                let millis = gameDuration.subsec_millis();
+                let time = format!("{}.{}", seconds, millis);
+                self.window.set_title("Minesweeper | You won! | You took " + &time + " seconds" ));
+            }
+            GameState::Lost(gameDuration) => {
+                self.window.set_title("Minesweeper | You lost!");
+            }
+            GameState::Playing(_) => {
+                self.window.set_title(&format!(
+                    "Minesweeper | {} mines left | {} seconds",
+                    game.mine_count - game.count_flags(),
+                    game.get_time_since_start().unwrap()
+                ));
+            },
+            GameState::Start => {
+                self.window.set_title("Minesweeper");
+            }
+        }
+
         unsafe {
             gl::Clear(gl::DEPTH_BUFFER_BIT);
         }
