@@ -26,7 +26,7 @@ impl Window {
 
         window.set_key_polling(true);
         window.set_framebuffer_size_polling(true);
-        window.set_resizable(false);
+        window.set_aspect_ratio(1, 1);
         window.set_cursor_pos_polling(true);
         window.set_cursor_mode(glfw::CursorMode::Normal);
         window.set_mouse_button_polling(true);
@@ -66,7 +66,9 @@ impl Window {
 
     pub fn init_gl(&mut self) {
         self.window.make_current();
-        gl::load_with(|symbol| self.window.get_proc_address(symbol) as *const _);
+        gl::load_with(|symbol| {
+            self.window.get_proc_address(symbol) as *const _
+        });
         unsafe {
             gl::Viewport(
                 0,
@@ -85,6 +87,8 @@ impl Window {
     }
 
     pub fn process_events(&mut self, game: &mut Game) {
+        let (width, height) = self.get_framebuffer_size();
+
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
                 WindowEvent::FramebufferSize(width, height) => unsafe {
@@ -113,7 +117,12 @@ impl Window {
                     let x_px = self.window.get_cursor_pos().0 as i32;
                     let y_px = self.window.get_cursor_pos().1 as i32;
 
-                    game.space_click(x_px, y_px);
+                    game.space_click(
+                        x_px,
+                        y_px,
+                        width as usize,
+                        height as usize,
+                    );
                 }
                 WindowEvent::Key(Key::Equal, _, Action::Press, _) => {
                     game.increase_size();
@@ -127,7 +136,12 @@ impl Window {
                             let x = self.window.get_cursor_pos().0 as i32;
                             let y = self.window.get_cursor_pos().1 as i32;
 
-                            game.left_click(x, y);
+                            game.left_click(
+                                x,
+                                y,
+                                width as usize,
+                                height as usize,
+                            );
                             info!("Clicked tile at ({}, {})", x, y);
                         }
                     }
@@ -136,14 +150,18 @@ impl Window {
                             let x = self.window.get_cursor_pos().0 as i32;
                             let y = self.window.get_cursor_pos().1 as i32;
 
-                            game.right_click(x, y);
+                            game.right_click(
+                                x,
+                                y,
+                                width as usize,
+                                height as usize,
+                            );
                         }
                     }
                     _ => {}
                 },
                 _ => {}
             }
-
         }
     }
 
@@ -165,13 +183,21 @@ impl Window {
                 let seconds = game_duration.as_secs();
                 let millis = game_duration.subsec_millis();
                 let time = format!("{}.{}", seconds, millis);
-                self.window.set_title(&("Minesweeper | You won! | You took ".to_owned() + &*time + " seconds"));
+                self.window.set_title(
+                    &("Minesweeper | You won! | You took ".to_owned()
+                        + &*time
+                        + " seconds"),
+                );
             }
             GameState::Lost(game_duration) => {
                 let seconds = game_duration.as_secs();
                 let millis = game_duration.subsec_millis();
                 let time = format!("{}.{}", seconds, millis);
-                self.window.set_title(&("Minesweeper | You lost! | You took ".to_owned() + &*time + " seconds"));
+                self.window.set_title(
+                    &("Minesweeper | You lost! | You took ".to_owned()
+                        + &*time
+                        + " seconds"),
+                );
             }
             GameState::Playing(_) => {
                 self.window.set_title(&format!(
@@ -179,7 +205,7 @@ impl Window {
                     game.mine_count - game.count_flags(),
                     game.get_time_since_start().unwrap()
                 ));
-            },
+            }
             GameState::Start => {
                 self.window.set_title("Minesweeper");
             }

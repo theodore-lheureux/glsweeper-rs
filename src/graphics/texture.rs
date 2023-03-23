@@ -8,7 +8,8 @@ pub struct Texture {
 
 impl Texture {
     pub fn new(image_file: Vec<u8>, unit: u32) -> Self {
-        let img = image::load_from_memory(&image_file).expect("Failed to load texture image.");
+        let img = image::load_from_memory(&image_file)
+            .expect("Failed to load texture image.");
         let rgba = img.into_rgba8();
         let (width, height) = rgba.dimensions();
 
@@ -27,10 +28,26 @@ impl Texture {
         };
 
         unsafe {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_WRAP_S,
+                gl::REPEAT as i32,
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_WRAP_T,
+                gl::REPEAT as i32,
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR_MIPMAP_LINEAR as i32,
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32,
+            );
 
             gl::TexImage2D(
                 gl::TEXTURE_2D,

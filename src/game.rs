@@ -1,8 +1,8 @@
 use std::time;
 
 use crate::{
-    HEIGHT_INCREMENT, HEIGHT_PX, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
-    WIDTH_PX,
+    HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
+    WIDTH_INCREMENT,
 };
 
 use self::{
@@ -13,7 +13,7 @@ use self::{
 pub mod game_textures;
 pub mod tile;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GameState {
     Start,
     Playing(time::Instant),
@@ -35,7 +35,13 @@ impl Game {
         for r in 0..height {
             let mut row = Vec::new();
             for c in 0..width {
-                let tile = tile::Tile::new(tile::TileType::Empty(0), c, r, width, height);
+                let tile = tile::Tile::new(
+                    tile::TileType::Empty(0),
+                    c,
+                    r,
+                    width,
+                    height,
+                );
                 row.push(tile);
             }
             tiles.push(row);
@@ -58,8 +64,10 @@ impl Game {
                 if start_x == 0 { 1 } else { start_x },
                 if start_y == 0 { 1 } else { start_y },
             );
-            let is_adjacent =
-                x >= start_x - 1 && x <= start_x + 1 && y >= start_y - 1 && y <= start_y + 1;
+            let is_adjacent = x >= start_x - 1
+                && x <= start_x + 1
+                && y >= start_y - 1
+                && y <= start_y + 1;
 
             if is_adjacent || self.tiles[y][x].is_bomb() {
                 continue;
@@ -100,7 +108,8 @@ impl Game {
                 tile.tile_state = TileState::Exploded;
                 self.reveal_all();
                 if let GameState::Playing(start_time) = self.state {
-                    self.state = GameState::Lost(time::Instant::now() - start_time);
+                    self.state =
+                        GameState::Lost(time::Instant::now() - start_time);
                 }
             }
             TileType::Empty(0) => {
@@ -114,7 +123,11 @@ impl Game {
                         let x = x as isize + x_offset;
                         let y = y as isize + y_offset;
 
-                        if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                        if x >= 0
+                            && x < self.width as isize
+                            && y >= 0
+                            && y < self.height as isize
+                        {
                             self.reveal_tile(x as usize, y as usize);
                         }
                     }
@@ -201,7 +214,11 @@ impl Game {
                     let x = x as isize + x_offset;
                     let y = y as isize + y_offset;
 
-                    if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                    if x >= 0
+                        && x < self.width as isize
+                        && y >= 0
+                        && y < self.height as isize
+                    {
                         let tile = &mut self.tiles[y as usize][x as usize];
                         if !tile.is_revealed() {
                             self.reveal_tile(x as usize, y as usize);
@@ -224,7 +241,11 @@ impl Game {
                 let x = x as isize + x_offset;
                 let y = y as isize + y_offset;
 
-                if x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize {
+                if x >= 0
+                    && x < self.width as isize
+                    && y >= 0
+                    && y < self.height as isize
+                {
                     tiles.push(&self.tiles[y as usize][x as usize]);
                 }
             }
@@ -241,8 +262,21 @@ impl Game {
             .count()
     }
 
-    pub fn left_click(&mut self, x_px: i32, y_px: i32) {
-        let (x, y) = tile_position(x_px, y_px, self.width, self.height);
+    pub fn left_click(
+        &mut self,
+        x_px: i32,
+        y_px: i32,
+        window_width: usize,
+        window_height: usize,
+    ) {
+        let (x, y) = tile_position(
+            x_px,
+            y_px,
+            self.width,
+            self.height,
+            window_width,
+            window_height,
+        );
 
         if x >= self.width || y >= self.height {
             return;
@@ -263,8 +297,21 @@ impl Game {
         }
     }
 
-    pub fn right_click(&mut self, x_px: i32, y_px: i32) {
-        let (x, y) = tile_position(x_px, y_px, self.width, self.height);
+    pub fn right_click(
+        &mut self,
+        x_px: i32,
+        y_px: i32,
+        window_width: usize,
+        window_height: usize,
+    ) {
+        let (x, y) = tile_position(
+            x_px,
+            y_px,
+            self.width,
+            self.height,
+            window_width,
+            window_height,
+        );
 
         if x >= self.width || y >= self.height {
             return;
@@ -275,8 +322,21 @@ impl Game {
         }
     }
 
-    pub fn space_click(&mut self, x_px: i32, y_px: i32) {
-        let (x, y) = tile_position(x_px, y_px, self.width, self.height);
+    pub fn space_click(
+        &mut self,
+        x_px: i32,
+        y_px: i32,
+        window_width: usize,
+        window_height: usize,
+    ) {
+        let (x, y) = tile_position(
+            x_px,
+            y_px,
+            self.width,
+            self.height,
+            window_width,
+            window_height,
+        );
 
         if x >= self.width || y >= self.height {
             return;
@@ -350,10 +410,17 @@ impl Game {
     }
 }
 
-fn tile_position(x_px: i32, y_px: i32, width_tiles: usize, heigh_tiles: usize) -> (usize, usize) {
-    let x = x_px as f32 / (WIDTH_PX as f32 / heigh_tiles as f32);
-    let y = y_px as f32 / (HEIGHT_PX as f32 / width_tiles as f32);
-    let y = heigh_tiles as f32 - y;
+fn tile_position(
+    x_px: i32,
+    y_px: i32,
+    width_tiles: usize,
+    height_tiles: usize,
+    window_width: usize,
+    window_height: usize,
+) -> (usize, usize) {
+    let x = x_px as f32 / (window_width as f32 / height_tiles as f32);
+    let y = y_px as f32 / (window_height as f32 / width_tiles as f32);
+    let y = height_tiles as f32 - y;
 
     (x as usize, y as usize)
 }

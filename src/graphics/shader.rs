@@ -8,8 +8,10 @@ pub struct Shader {
 
 impl Shader {
     pub fn new(vertex_code: String, fragment_code: String) -> Self {
-        let vertex_shader = Self::compile_shader(vertex_code.as_str(), gl::VERTEX_SHADER);
-        let fragment_shader = Self::compile_shader(fragment_code.as_str(), gl::FRAGMENT_SHADER);
+        let vertex_shader =
+            Self::compile_shader(vertex_code.as_str(), gl::VERTEX_SHADER);
+        let fragment_shader =
+            Self::compile_shader(fragment_code.as_str(), gl::FRAGMENT_SHADER);
 
         let id = Self::link_program(vertex_shader, fragment_shader);
 
