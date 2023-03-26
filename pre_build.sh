@@ -1,1 +1,0 @@
-sudo apt install -y ibglfw3-dev xorg-dev libx11-dev libxss-dev libxxf86vm-dev libxkbfile-dev libxv-dev
