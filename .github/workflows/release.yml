@@ -17,10 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           RUSTTARGET: ${{ matrix.target }}
           EXTRA_FILES: "README.md LICENSE"
           PRE_BUILD: "pre_build.sh"
+        run: chmod +x ci/github-actions/entrypoint.sh ci/github-actions/build.sh && ./ci/github-actions/entrypoint.sh
