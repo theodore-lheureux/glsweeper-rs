@@ -15,9 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - uses: awalsh128/cache-apt-pkgs-action@latest
-          with:
-            packages: libglfw3-dev xorg-dev
-            version: 1.0
+        with:
+          packages: libglfw3-dev xorg-dev
+          version: 1.0
       - name: Compile and release
         uses: rust-build/rust-build.action@v1.4.3
         env:
