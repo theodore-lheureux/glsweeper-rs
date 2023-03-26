@@ -19,8 +19,7 @@ jobs:
       - name: Compile and release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
           RUSTTARGET: ${{ matrix.target }}
+          ARCHIVE_TYPES: ${{ matrix.archive }}
           EXTRA_FILES: "README.md LICENSE"
-          PRE_BUILD: "pre_build.sh"
         run: chmod +x ci/github-actions/entrypoint.sh ci/github-actions/build.sh && ./ci/github-actions/entrypoint.sh
