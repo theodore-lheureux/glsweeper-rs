@@ -1,5 +1,7 @@
 # .github/workflows/release.yml
 
+name: release
+
 on:
   release:
     types: [created]
@@ -16,7 +18,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: libglfw3-dev xorg-dev
+          packages: libglfw3-dev xorg-dev libx11-dev libxss-dev libxxf86vm-dev libxkbfile-dev libxv-dev
           version: 1.0
       - name: Compile and release
         uses: rust-build/rust-build.action@v1.4.3
