@@ -1,19 +1,16 @@
 use std::time;
 
 use crate::{
-    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH,
-    MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
+    graphics::{gl_wrapper::VAO, texture::Texture},
+    HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
+    WIDTH_INCREMENT,
 };
 
-use self::{
-    game_textures::GameTextures,
-    tile::{Tile, TileState, TileType},
-};
+use self::tile::{Tile, TileState, TileType};
 
 mod coordinates;
 mod draw;
-pub mod game_textures;
-pub mod tile;
+mod tile;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GameState {
@@ -368,10 +365,8 @@ impl Game {
         &mut self.tiles[(y * self.width + x) as usize]
     }
 
-    pub fn draw(&self, textures: &mut GameTextures) {
+    pub fn draw(&self) {
         self.vao.bind();
-
-        textures.tile_unrevealed.bind(0);
 
         unsafe {
             gl::DrawElements(

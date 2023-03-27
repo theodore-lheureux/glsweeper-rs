@@ -2,11 +2,12 @@ use std::ptr;
 
 use gl::types::{GLfloat, GLsizei};
 
-use crate::graphics::gl_wrapper::{VertexAttribute, VAO, VBO, EBO};
+use crate::graphics::gl_wrapper::{VertexAttribute, EBO, VAO, VBO};
 
 pub fn generate_game_vao(width: isize, height: isize) -> VAO {
     let mut vertices: Vec<f32> = Vec::new();
     let mut indices: Vec<u32> = Vec::new();
+    let mut pos = 0.0;
 
     for x in 0..width {
         for y in 0..height {
@@ -30,21 +31,26 @@ pub fn generate_game_vao(width: isize, height: isize) -> VAO {
                 x,
                 y,
                 0.0,
-                1.0, // top left
+                1.0,
+                pos, // top left
                 x + tile_size,
                 y,
                 1.0,
-                1.0, // top right
+                1.0,
+                pos, // top right
                 x,
                 y + tile_size,
                 0.0,
-                0.0, // bottom left
+                0.0,
+                pos, // bottom left
                 x + tile_size,
                 y + tile_size,
                 1.0,
-                0.0, // bottom right
+                0.0,
+                pos, // bottom right
             ]);
 
+            pos += 0.005;
         }
     }
 
@@ -60,20 +66,21 @@ pub fn generate_game_vao(width: isize, height: isize) -> VAO {
     ebo.bind();
     ebo.bind_buffer_data(&indices);
 
-    let vertex_position: VertexAttribute;
+    let vertex_coords: VertexAttribute;
     let vertex_texture: VertexAttribute;
+    let vertex_pos: VertexAttribute;
 
     unsafe {
-        vertex_position = VertexAttribute::new(
+        vertex_coords = VertexAttribute::new(
             0,
             2,
             gl::FLOAT,
             gl::FALSE,
-            4 * std::mem::size_of::<GLfloat>() as GLsizei,
+            5 * std::mem::size_of::<GLfloat>() as GLsizei,
             ptr::null(),
         );
     }
-    vertex_position.enable();
+    vertex_coords.enable();
 
     unsafe {
         vertex_texture = VertexAttribute::new(
@@ -81,11 +88,23 @@ pub fn generate_game_vao(width: isize, height: isize) -> VAO {
             2,
             gl::FLOAT,
             gl::FALSE,
-            4 * std::mem::size_of::<GLfloat>() as GLsizei,
+            5 * std::mem::size_of::<GLfloat>() as GLsizei,
             (2 * std::mem::size_of::<GLfloat>()) as *const _,
         );
     }
     vertex_texture.enable();
+
+    unsafe {
+        vertex_pos = VertexAttribute::new(
+            2,
+            1,
+            gl::FLOAT,
+            gl::FALSE,
+            5 * std::mem::size_of::<GLfloat>() as GLsizei,
+            (4 * std::mem::size_of::<GLfloat>()) as *const _,
+        );
+    }
+    vertex_pos.enable();
 
     vao.unbind();
     vbo.unbind();

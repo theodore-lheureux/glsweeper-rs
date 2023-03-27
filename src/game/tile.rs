@@ -70,27 +70,6 @@ impl Tile {
     pub fn unflag(&mut self) {
         self.tile_state = TileState::Unrevealed;
     }
-
-    // pub fn draw(&self, textures: &mut GameTextures) {
-    //     self.vao.as_ref().unwrap().bind();
-
-    //     match self.tile_state {
-    //         TileState::Unrevealed => textures.tile_unrevealed.bind(0),
-    //         TileState::Revealed => match self.tile_type {
-    //             TileType::Bomb => textures.mine_revealed.bind(0),
-    //             TileType::Empty(n) => {
-    //                 textures.tile_revealed[n as usize].bind(0)
-    //             }
-    //         },
-    //         TileState::Flagged => textures.flag.bind(0),
-    //         TileState::WrongFlag => textures.flag_wrong.bind(0),
-    //         TileState::Exploded => textures.mine_exploded.bind(0),
-    //     }
-
-    //     unsafe {
-    //         gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
-    //     }
-    // }
 }
 
 impl Clone for Tile {
@@ -103,73 +82,3 @@ impl Clone for Tile {
         }
     }
 }
-
-// fn generate_tile_vao(x: isize, y: isize, width: isize, height: isize) -> VAO {
-//     let vao = VAO::new();
-//     vao.bind();
-
-//     let vbo = VBO::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW);
-//     vbo.bind();
-
-//     let x = (x as f32 / width as f32) * 2.0 - 1.0;
-//     let y = (y as f32 / height as f32) * 2.0 - 1.0;
-
-//     let tile_size = 2.0 / width as f32;
-
-//     let tile: [f32; 16] = [
-//         x,
-//         y,
-//         0.0,
-//         1.0, // top left
-//         x + tile_size,
-//         y,
-//         1.0,
-//         1.0, // top right
-//         x,
-//         y + tile_size,
-//         0.0,
-//         0.0, // bottom left
-//         x + tile_size,
-//         y + tile_size,
-//         1.0,
-//         0.0, // bottom right
-//     ];
-
-//     vbo.bind_buffer_data(&tile);
-
-//     let ebo = EBO::new(gl::ELEMENT_ARRAY_BUFFER, gl::STATIC_DRAW);
-//     ebo.bind();
-//     ebo.bind_buffer_data(&INDICES);
-
-//     let vertex_position: VertexAttribute;
-//     let vertex_texture: VertexAttribute;
-
-//     unsafe {
-//         vertex_position = VertexAttribute::new(
-//             0,
-//             2,
-//             gl::FLOAT,
-//             gl::FALSE,
-//             4 * std::mem::size_of::<GLfloat>() as GLsizei,
-//             ptr::null(),
-//         );
-//     }
-//     vertex_position.enable();
-
-//     unsafe {
-//         vertex_texture = VertexAttribute::new(
-//             1,
-//             2,
-//             gl::FLOAT,
-//             gl::FALSE,
-//             4 * std::mem::size_of::<GLfloat>() as GLsizei,
-//             (2 * std::mem::size_of::<GLfloat>()) as *const _,
-//         );
-//     }
-//     vertex_texture.enable();
-
-//     vao.unbind();
-//     vbo.unbind();
-//     ebo.unbind();
-//     vao
-// }
