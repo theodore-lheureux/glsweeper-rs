@@ -39,7 +39,7 @@ sudo mkdir -p "$OUTPUT_DIR"
 PROJECT_ROOT="/rust/build/${GITHUB_REPOSITORY}"
 sudo mkdir -p "$PROJECT_ROOT"
 sudo rmdir "$PROJECT_ROOT"
-ln -s "$GITHUB_WORKSPACE" "$PROJECT_ROOT"
+sudo ln -s "$GITHUB_WORKSPACE" "$PROJECT_ROOT"
 cd "$PROJECT_ROOT"
 
 # Run pre-build script
@@ -70,7 +70,7 @@ if [ -z "${EXTRA_FILES+x}" ]; then
   warn "EXTRA_FILES not set"
 else
   for file in $(echo -n "${EXTRA_FILES}" | tr " " "\n"); do
-    cp --parents "$file" "$OUTPUT_DIR"
+    sudo cp --parents "$file" "$OUTPUT_DIR"
   done
 fi
 
@@ -90,11 +90,11 @@ for ARCHIVE_TYPE in $ARCHIVE_TYPES; do
   # shellcheck disable=SC2086
   case $ARCHIVE_TYPE in
     "zip")
-      zip -9r $ARCHIVE ${FILE_LIST}
+      sudo zip -9r $ARCHIVE ${FILE_LIST}
     ;;
 
     "tar"|"tar.gz"|"tar.bz2"|"tar.xz"|"tar.zst")
-      tar caf $ARCHIVE ${FILE_LIST}
+      sudo tar caf $ARCHIVE ${FILE_LIST}
     ;;
 
     *)
@@ -106,8 +106,8 @@ for ARCHIVE_TYPE in $ARCHIVE_TYPES; do
   printf "%s %s" "$(sha256sum "${ARCHIVE}" | cut -d ' ' -f 1)" "$FILE_NAME" > "${ARCHIVE}.sha256sum"
   CHECKSUM_FILE_NAME="${FILE_NAME}.sha256sum"
 
-  mv "$ARCHIVE" "$FILE_NAME"
-  mv "${ARCHIVE}.sha256sum" "$CHECKSUM_FILE_NAME"
+  sudo mv "$ARCHIVE" "$FILE_NAME"
+  sudo mv "${ARCHIVE}.sha256sum" "$CHECKSUM_FILE_NAME"
   set_output "BUILT_ARCHIVE" "output/${FILE_NAME}"
   set_output "BUILT_CHECKSUM" "output/${CHECKSUM_FILE_NAME}"
 
