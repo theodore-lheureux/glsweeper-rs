@@ -1,6 +1,9 @@
-use std::time;
+use std::{ptr, time};
+
+use gl::types::{GLfloat, GLsizei};
 
 use crate::{
+    graphics::gl_wrapper::{VertexAttribute, VAO, VBO},
     HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
     WIDTH_INCREMENT,
 };
@@ -27,17 +30,25 @@ pub struct Game {
     pub height: isize,
     pub state: GameState,
     pub mine_count: isize,
+    vao: VAO,
 }
 
 impl Game {
     pub fn new(width: isize, height: isize) -> Self {
+
         let mut tiles = Vec::new();
 
         for y in 0..height {
             for x in 0..width {
-                tiles.push(Tile::new(TileType::Empty(0), x, y, width, height));
+                tiles.push(Tile::new(TileType::Empty(0), x, y));
             }
         }
+
+        let start = time::Instant::now();
+        let vao = generate_game_vao(width, height);
+
+        let end = start.elapsed();
+        println!("VAO generation took {} ms", end.as_millis());
 
         Game {
             tiles,
@@ -45,7 +56,9 @@ impl Game {
             height,
             state: GameState::Start,
             mine_count: width * height / 5,
+            vao
         }
+
     }
 
     fn init(&mut self, start_x: isize, start_y: isize) {
@@ -79,7 +92,7 @@ impl Game {
                 if self.get_tile(x, y).is_bomb() {
                     continue;
                 }
-                
+
                 let mut bombs = 0;
 
                 self.do_for_adjacent_tiles(x, y, |_, tile| {
@@ -365,8 +378,12 @@ impl Game {
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {
-        for tile in &self.tiles {
-            tile.draw(textures);
+        self.vao.bind();
+
+        textures.tile_unrevealed.bind(0);
+
+        unsafe {
+            gl::DrawArrays(gl::TRIANGLES, 0, (6 * self.width * self.height) as i32);
         }
     }
 }
@@ -406,4 +423,83 @@ fn random_coords(width: isize, height: isize) -> (isize, isize) {
         (rand::random::<usize>() % width as usize) as isize,
         (rand::random::<usize>() % height as usize) as isize,
     )
+}
+
+fn generate_game_vao(width: isize, height: isize) -> VAO {
+    let mut vertices: Vec<f32> = Vec::new();
+
+    for x in 0..width {
+        for y in 0..height {
+            let x = (x as f32 / width as f32) * 2.0 - 1.0;
+            let y = (y as f32 / height as f32) * 2.0 - 1.0;
+
+            let tile_size = 2.0 / width as f32;
+
+            vertices.extend_from_slice(&[
+                x,
+                y,
+                0.0,
+                1.0, // top left
+                x + tile_size,
+                y,
+                1.0,
+                1.0, // top right
+                x,
+                y + tile_size,
+                0.0,
+                0.0, // bottom left
+                x + tile_size,
+                y,
+                1.0,
+                1.0, // top right
+                x,
+                y + tile_size,
+                0.0,
+                0.0, // bottom left
+                x + tile_size,
+                y + tile_size,
+                1.0,
+                0.0, // bottom right
+            ]);
+        }
+    }
+    
+    let vao = VAO::new();
+    vao.bind();
+
+    let vbo = VBO::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW);
+    vbo.bind();
+
+    vbo.bind_buffer_data(&vertices);
+
+    let vertex_position: VertexAttribute;
+    let vertex_texture: VertexAttribute;
+
+    unsafe {
+        vertex_position = VertexAttribute::new(
+            0,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            4 * std::mem::size_of::<GLfloat>() as GLsizei,
+            ptr::null(),
+        );
+    }
+    vertex_position.enable();
+
+    unsafe {
+        vertex_texture = VertexAttribute::new(
+            1,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            4 * std::mem::size_of::<GLfloat>() as GLsizei,
+            (2 * std::mem::size_of::<GLfloat>()) as *const _,
+        );
+    }
+    vertex_texture.enable();
+
+    vao.unbind();
+    vbo.unbind();
+    vao
 }

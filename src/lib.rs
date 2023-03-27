@@ -7,8 +7,8 @@ pub mod game;
 pub mod graphics;
 pub mod logger;
 
-pub const DEFAULT_WIDTH: isize = 11;
-pub const DEFAULT_HEIGHT: isize = 11;
+pub const DEFAULT_WIDTH: isize = 500;
+pub const DEFAULT_HEIGHT: isize = 500;
 
 pub const MAX_WIDTH: isize = 950;
 pub const MAX_HEIGHT: isize = 950;
