@@ -48,34 +48,29 @@ impl Game {
         }
     }
 
-    fn place_mines(&mut self, start_x: isize, start_y: isize) {
+    fn init(&mut self, start_x: isize, start_y: isize) {
         if self.get_tile(start_x, start_y).is_flagged() {
             return;
         }
 
+        self.place_mines();
+        self.place_numbers();
+        self.state = GameState::Playing(time::Instant::now());
+    }
+
+    fn place_mines(&mut self) {
         let mut mines = 0;
 
         while mines < self.mine_count {
             let (x, y) = random_coords(self.width, self.height);
-            let (start_x, start_y) = (
-                if start_x == 0 { 1 } else { start_x },
-                if start_y == 0 { 1 } else { start_y },
-            );
-            let is_adjacent = x >= start_x - 1
-                && x <= start_x + 1
-                && y >= start_y - 1
-                && y <= start_y + 1;
 
-            if is_adjacent || self.get_tile(x, y).is_bomb() {
+            if self.get_tile(x, y).is_bomb() {
                 continue;
             }
 
             self.get_tile_mut(x, y).tile_type = TileType::Bomb;
             mines += 1;
         }
-
-        self.state = GameState::Playing(time::Instant::now());
-        self.place_numbers();
     }
 
     fn place_numbers(&mut self) {
@@ -152,6 +147,9 @@ impl Game {
         if let GameState::Playing(start_time) = self.state {
             self.state = GameState::Won(time::Instant::now() - start_time);
         }
+        self.flag_all_mines();
+    }
+    fn flag_all_mines(&mut self) {
         self.tiles
             .iter_mut()
             .filter(|tile| tile.is_bomb())
@@ -243,7 +241,7 @@ impl Game {
 
         match self.state {
             GameState::Start => {
-                self.place_mines(x, y);
+                self.init(x, y);
                 self.reveal_tile(x, y);
             }
             GameState::Playing(_) => {
