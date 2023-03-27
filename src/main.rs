@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tile_shader.use_program();
 
     while !window.should_close() {
-        clear_draw(0.2, 0.3, 0.3, 1.0);
+        clear_draw(0.3, 0.3, 0.3, 1.0);
         current_game.draw(&mut textures);
         window.update(&mut current_game);
     }

@@ -26,7 +26,7 @@ impl Window {
 
         window.set_key_polling(true);
         window.set_framebuffer_size_polling(true);
-        window.set_aspect_ratio(1, 1);
+        // window.set_aspect_ratio(1, 1);
         window.set_cursor_pos_polling(true);
         window.set_cursor_mode(glfw::CursorMode::Normal);
         window.set_mouse_button_polling(true);
@@ -92,7 +92,14 @@ impl Window {
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
                 WindowEvent::FramebufferSize(width, height) => unsafe {
-                    gl::Viewport(0, 0, width, height);
+                    let x = (width - height) / 2;
+                    let y = (height - width) / 2;
+
+                    if width > height {
+                        gl::Viewport(x, 0, height, height);
+                    } else {
+                        gl::Viewport(0, y, width, width);
+                    }
                 },
                 WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
                     self.window.set_should_close(true)
@@ -114,15 +121,10 @@ impl Window {
                     *game = Game::new(game.width, game.height);
                 }
                 WindowEvent::Key(Key::Space, _, Action::Press, _) => {
-                    let x_px = self.window.get_cursor_pos().0 as i32;
-                    let y_px = self.window.get_cursor_pos().1 as i32;
+                    let x_px = self.window.get_cursor_pos().0;
+                    let y_px = self.window.get_cursor_pos().1;
 
-                    game.space_click(
-                        x_px,
-                        y_px,
-                        width as usize,
-                        height as usize,
-                    );
+                    game.space_click(x_px, y_px, width as f64, height as f64);
                 }
                 WindowEvent::Key(Key::Equal, _, Action::Press, _) => {
                     game.increase_size();
@@ -133,29 +135,19 @@ impl Window {
                 WindowEvent::MouseButton(button, action, _) => match button {
                     glfw::MouseButtonLeft => {
                         if action == glfw::Action::Press {
-                            let x = self.window.get_cursor_pos().0 as i32;
-                            let y = self.window.get_cursor_pos().1 as i32;
+                            let x = self.window.get_cursor_pos().0;
+                            let y = self.window.get_cursor_pos().1;
 
-                            game.left_click(
-                                x,
-                                y,
-                                width as usize,
-                                height as usize,
-                            );
+                            game.left_click(x, y, width as f64, height as f64);
                             info!("Clicked tile at ({}, {})", x, y);
                         }
                     }
                     glfw::MouseButtonRight => {
                         if action == glfw::Action::Press {
-                            let x = self.window.get_cursor_pos().0 as i32;
-                            let y = self.window.get_cursor_pos().1 as i32;
+                            let x = self.window.get_cursor_pos().0;
+                            let y = self.window.get_cursor_pos().1;
 
-                            game.right_click(
-                                x,
-                                y,
-                                width as usize,
-                                height as usize,
-                            );
+                            game.right_click(x, y, width as f64, height as f64);
                         }
                     }
                     _ => {}

@@ -264,10 +264,10 @@ impl Game {
 
     pub fn left_click(
         &mut self,
-        x_px: i32,
-        y_px: i32,
-        window_width: usize,
-        window_height: usize,
+        x_px: f64,
+        y_px: f64,
+        window_width: f64,
+        window_height: f64,
     ) {
         let (x, y) = tile_position(
             x_px,
@@ -299,10 +299,10 @@ impl Game {
 
     pub fn right_click(
         &mut self,
-        x_px: i32,
-        y_px: i32,
-        window_width: usize,
-        window_height: usize,
+        x_px: f64,
+        y_px: f64,
+        window_width: f64,
+        window_height: f64,
     ) {
         let (x, y) = tile_position(
             x_px,
@@ -324,10 +324,10 @@ impl Game {
 
     pub fn space_click(
         &mut self,
-        x_px: i32,
-        y_px: i32,
-        window_width: usize,
-        window_height: usize,
+        x_px: f64,
+        y_px: f64,
+        window_width: f64,
+        window_height: f64,
     ) {
         let (x, y) = tile_position(
             x_px,
@@ -411,18 +411,33 @@ impl Game {
 }
 
 fn tile_position(
-    x_px: i32,
-    y_px: i32,
+    x_px: f64,
+    y_px: f64,
     width_tiles: usize,
     height_tiles: usize,
-    window_width: usize,
-    window_height: usize,
+    window_width: f64,
+    window_height: f64,
 ) -> (usize, usize) {
-    let x = x_px as f32 / (window_width as f32 / height_tiles as f32);
-    let y = y_px as f32 / (window_height as f32 / width_tiles as f32);
-    let y = height_tiles as f32 - y;
+    let width_tiles = width_tiles as f64;
+    let height_tiles = height_tiles as f64;
+    let (offset_x, offset_y) = (
+        (window_width - window_height) / 2.0,
+        (window_height - window_width) / 2.0,
+    );
 
-    (x as usize, y as usize)
+    if window_width > window_height {
+        let x = x_px - offset_x;
+        (
+            (x / window_height * width_tiles) as usize,
+            (height_tiles - y_px / window_height * height_tiles) as usize,
+        )
+    } else {
+        let y = y_px - offset_y;
+        (
+            (x_px / window_width * width_tiles) as usize,
+            (height_tiles - y / window_width * height_tiles) as usize,
+        )
+    }
 }
 
 fn random_coords(width: usize, height: usize) -> (usize, usize) {
