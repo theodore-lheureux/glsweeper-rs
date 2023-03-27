@@ -34,12 +34,7 @@ info "Installing additional linkers"
 case ${RUSTTARGET} in
 "x86_64-pc-windows-gnu") ;;
 
-"x86_64-unknown-linux-musl") ;;
-
-"x86_64-unknown-linux-gnu") 
-error "x86_64-unknown-linux-gnu is not supported: please use x86_64-unknown-linux-musl for a statically linked c library"
-exit 1
-;;
+"x86_64-unknown-linux-gnu") ;;
 
 "wasm32-wasi") ;;
 
@@ -107,7 +102,7 @@ for BINARY in $BINARIES; do
   info "Saving $OUTPUT..."
 
   # shellcheck disable=SC2086
-  mv $OUTPUT "$OUTPUT_DIR" || error "Unable to copy binary"
+  sudo mv $OUTPUT "$OUTPUT_DIR" || error "Unable to copy binary"
 
   for f in $OUTPUT; do
     OUTPUT_LIST="$OUTPUT_LIST $(basename "$f")"
