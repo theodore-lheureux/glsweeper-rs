@@ -1,11 +1,8 @@
-use std::{ptr, time};
-
-use gl::types::{GLfloat, GLsizei};
+use std::time;
 
 use crate::{
-    graphics::gl_wrapper::{VertexAttribute, VAO, VBO},
-    HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
-    WIDTH_INCREMENT,
+    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH,
+    MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
 };
 
 use self::{
@@ -13,6 +10,8 @@ use self::{
     tile::{Tile, TileState, TileType},
 };
 
+mod coordinates;
+mod draw;
 pub mod game_textures;
 pub mod tile;
 
@@ -35,7 +34,6 @@ pub struct Game {
 
 impl Game {
     pub fn new(width: isize, height: isize) -> Self {
-
         let mut tiles = Vec::new();
 
         for y in 0..height {
@@ -44,21 +42,14 @@ impl Game {
             }
         }
 
-        let start = time::Instant::now();
-        let vao = generate_game_vao(width, height);
-
-        let end = start.elapsed();
-        println!("VAO generation took {} ms", end.as_millis());
-
         Game {
             tiles,
             width,
             height,
             state: GameState::Start,
             mine_count: width * height / 5,
-            vao
+            vao: draw::generate_game_vao(width, height),
         }
-
     }
 
     fn init(&mut self, start_x: isize, start_y: isize) {
@@ -75,7 +66,7 @@ impl Game {
         let mut mines = 0;
 
         while mines < self.mine_count {
-            let (x, y) = random_coords(self.width, self.height);
+            let (x, y) = coordinates::random_coords(self.width, self.height);
 
             if self.get_tile(x, y).is_bomb() {
                 continue;
@@ -239,7 +230,7 @@ impl Game {
         window_width: f64,
         window_height: f64,
     ) {
-        let (x, y) = tile_position(
+        let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
             self.width,
@@ -274,7 +265,7 @@ impl Game {
         window_width: f64,
         window_height: f64,
     ) {
-        let (x, y) = tile_position(
+        let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
             self.width,
@@ -299,7 +290,7 @@ impl Game {
         window_width: f64,
         window_height: f64,
     ) {
-        let (x, y) = tile_position(
+        let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
             self.width,
@@ -383,123 +374,11 @@ impl Game {
         textures.tile_unrevealed.bind(0);
 
         unsafe {
-            gl::DrawArrays(gl::TRIANGLES, 0, (6 * self.width * self.height) as i32);
+            gl::DrawArrays(
+                gl::TRIANGLES,
+                0,
+                (6 * self.width * self.height) as i32,
+            );
         }
     }
-}
-
-fn tile_position(
-    x_px: f64,
-    y_px: f64,
-    width_tiles: isize,
-    height_tiles: isize,
-    window_width: f64,
-    window_height: f64,
-) -> (isize, isize) {
-    let width_tiles = width_tiles as f64;
-    let height_tiles = height_tiles as f64;
-    let (offset_x, offset_y) = (
-        (window_width - window_height) / 2.0,
-        (window_height - window_width) / 2.0,
-    );
-
-    if window_width > window_height {
-        let x = x_px - offset_x;
-        (
-            (x / window_height * width_tiles) as isize,
-            (height_tiles - y_px / window_height * height_tiles) as isize,
-        )
-    } else {
-        let y = y_px - offset_y;
-        (
-            (x_px / window_width * width_tiles) as isize,
-            (height_tiles - y / window_width * height_tiles) as isize,
-        )
-    }
-}
-
-fn random_coords(width: isize, height: isize) -> (isize, isize) {
-    (
-        (rand::random::<usize>() % width as usize) as isize,
-        (rand::random::<usize>() % height as usize) as isize,
-    )
-}
-
-fn generate_game_vao(width: isize, height: isize) -> VAO {
-    let mut vertices: Vec<f32> = Vec::new();
-
-    for x in 0..width {
-        for y in 0..height {
-            let x = (x as f32 / width as f32) * 2.0 - 1.0;
-            let y = (y as f32 / height as f32) * 2.0 - 1.0;
-
-            let tile_size = 2.0 / width as f32;
-
-            vertices.extend_from_slice(&[
-                x,
-                y,
-                0.0,
-                1.0, // top left
-                x + tile_size,
-                y,
-                1.0,
-                1.0, // top right
-                x,
-                y + tile_size,
-                0.0,
-                0.0, // bottom left
-                x + tile_size,
-                y,
-                1.0,
-                1.0, // top right
-                x,
-                y + tile_size,
-                0.0,
-                0.0, // bottom left
-                x + tile_size,
-                y + tile_size,
-                1.0,
-                0.0, // bottom right
-            ]);
-        }
-    }
-    
-    let vao = VAO::new();
-    vao.bind();
-
-    let vbo = VBO::new(gl::ARRAY_BUFFER, gl::STATIC_DRAW);
-    vbo.bind();
-
-    vbo.bind_buffer_data(&vertices);
-
-    let vertex_position: VertexAttribute;
-    let vertex_texture: VertexAttribute;
-
-    unsafe {
-        vertex_position = VertexAttribute::new(
-            0,
-            2,
-            gl::FLOAT,
-            gl::FALSE,
-            4 * std::mem::size_of::<GLfloat>() as GLsizei,
-            ptr::null(),
-        );
-    }
-    vertex_position.enable();
-
-    unsafe {
-        vertex_texture = VertexAttribute::new(
-            1,
-            2,
-            gl::FLOAT,
-            gl::FALSE,
-            4 * std::mem::size_of::<GLfloat>() as GLsizei,
-            (2 * std::mem::size_of::<GLfloat>()) as *const _,
-        );
-    }
-    vertex_texture.enable();
-
-    vao.unbind();
-    vbo.unbind();
-    vao
 }
