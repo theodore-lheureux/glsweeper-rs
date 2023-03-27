@@ -1,4 +1,4 @@
-name: Rust CI
+name: Rust 
 
 on:
   push:
@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libglfw3-dev xorg-dev
+          version: 1.0
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -29,6 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libglfw3-dev xorg-dev
+          version: 1.0
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -43,6 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libglfw3-dev xorg-dev
+          version: 1.0
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -59,6 +71,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libglfw3-dev xorg-dev
+          version: 1.0
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
