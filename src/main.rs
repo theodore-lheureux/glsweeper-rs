@@ -11,8 +11,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     logger::init();
 
     let mut window = Window::new(
-        glsweeper_rs::DEFAULT_WINDOW_WIDTH as u32,
-        glsweeper_rs::DEFAULT_WINDOW_HEIGHT as u32,
+        glsweeper_rs::DEFAULT_WINDOW_WIDTH,
+        glsweeper_rs::DEFAULT_WINDOW_HEIGHT,
         "GL Sweeper",
     );
     window.set_icon(include_bytes!("../icon.png").to_vec());
