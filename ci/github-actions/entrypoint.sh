@@ -33,12 +33,12 @@ if [ -z "${CMD_PATH+x}" ]; then
 fi
 
 OUTPUT_DIR="/github/workspace/output"
-mkdir -p "$OUTPUT_DIR"
+sudo mkdir -p "$OUTPUT_DIR"
 
 # Link repo
 PROJECT_ROOT="/rust/build/${GITHUB_REPOSITORY}"
-mkdir -p "$PROJECT_ROOT"
-rmdir "$PROJECT_ROOT"
+sudo mkdir -p "$PROJECT_ROOT"
+sudo rmdir "$PROJECT_ROOT"
 ln -s "$GITHUB_WORKSPACE" "$PROJECT_ROOT"
 cd "$PROJECT_ROOT"
 
