@@ -86,11 +86,13 @@ impl Game {
                 if self.get_tile(x, y).is_bomb() {
                     continue;
                 }
-                let bombs = self
-                    .get_adjacent_tiles(x, y)
-                    .iter()
-                    .filter(|t| t.is_bomb())
-                    .count() as u8;
+                let mut bombs = 0;
+
+                self.do_for_adjacent_tiles(x, y, |_, tile| {
+                    if tile.is_bomb() {
+                        bombs += 1;
+                    }
+                });
 
                 self.get_tile_mut(x, y).tile_type = tile::TileType::Empty(bombs);
             }
@@ -114,24 +116,9 @@ impl Game {
             }
             TileType::Empty(0) => {
                 tile.reveal();
-                for x_offset in -1..2 {
-                    for y_offset in -1..2 {
-                        if x_offset == 0 && y_offset == 0 {
-                            continue;
-                        }
-
-                        let x = x + x_offset;
-                        let y = y + y_offset;
-
-                        if x >= 0
-                            && x < self.width
-                            && y >= 0
-                            && y < self.height
-                        {
-                            self.reveal_tile(x, y);
-                        }
-                    }
-                }
+                self.do_for_adjacent_tiles(x, y, |game, tile| {
+                    game.reveal_tile(tile.x, tile.y);
+                });
             }
             _ => tile.reveal(),
         }
@@ -198,39 +185,25 @@ impl Game {
             0,
         );
 
-        for tile in self.get_adjacent_tiles(x, y) {
+        self.do_for_adjacent_tiles(x, y, |_, tile| {
             if tile.is_flagged() {
                 flags += 1;
             }
-        }
+        });
 
         if flags == bomb_count {
-            for x_offset in -1..2 {
-                for y_offset in -1..2 {
-                    if x_offset == 0 && y_offset == 0 {
-                        continue;
-                    }
-
-                    let x = x + x_offset;
-                    let y = y + y_offset;
-
-                    if x >= 0
-                        && x < self.width
-                        && y >= 0
-                        && y < self.height
-                        && !self.get_tile(x, y).is_revealed()
-
-                    {
-                        self.reveal_tile(x, y);
-                    }
+            self.do_for_adjacent_tiles(x, y, |game, tile| {
+                if !tile.is_flagged() {
+                    game.reveal_tile(tile.x, tile.y);
                 }
-            }
+            });
         }
     }
 
-    fn get_adjacent_tiles(&self, x: isize, y: isize) -> Vec<&Tile> {
-        let mut tiles = Vec::new();
-
+    fn do_for_adjacent_tiles<F>(&mut self, x: isize, y: isize, mut f: F)
+    where
+        F: FnMut(&mut Game, Tile),
+    {
         for x_offset in -1..2 {
             for y_offset in -1..2 {
                 if x_offset == 0 && y_offset == 0 {
@@ -238,19 +211,20 @@ impl Game {
                 }
 
                 let x = x + x_offset;
-                let y = y  + y_offset;
+                let y = y + y_offset;
 
                 if x >= 0
                     && x < self.width
                     && y >= 0
                     && y < self.height
                 {
-                    tiles.push(self.get_tile(x, y));
+
+                    let tile = self.get_tile(x, y).clone();
+
+                    f(self, tile);
                 }
             }
         }
-
-        tiles
     }
 
     pub fn count_flags(&self) -> isize {

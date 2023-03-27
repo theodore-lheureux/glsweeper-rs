@@ -26,11 +26,11 @@ pub enum TileState {
     WrongFlag,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Tile {
     pub tile_type: TileType,
     pub tile_state: TileState,
-    pub vao: VAO,
+    pub vao: Option<VAO>,
     pub x: isize,
     pub y: isize,
 }
@@ -48,7 +48,7 @@ impl Tile {
         Tile {
             tile_type,
             tile_state: TileState::Unrevealed,
-            vao,
+            vao: Some(vao),
             x,
             y,
         }
@@ -95,7 +95,7 @@ impl Tile {
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {
-        self.vao.bind();
+        self.vao.as_ref().unwrap().bind();
 
         match self.tile_state {
             TileState::Unrevealed => textures.tile_unrevealed.bind(0),
@@ -112,6 +112,18 @@ impl Tile {
 
         unsafe {
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+        }
+    }
+}
+
+impl Clone for Tile {
+    fn clone(&self) -> Self {
+        Tile {
+            tile_type: self.tile_type,
+            tile_state: self.tile_state,
+            vao: None,
+            x: self.x,
+            y: self.y,
         }
     }
 }
