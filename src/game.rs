@@ -22,7 +22,7 @@ pub enum GameState {
 }
 
 pub struct Game {
-    pub tiles: Vec<Vec<tile::Tile>>,
+    pub tiles: Vec<tile::Tile>,
     pub width: isize,
     pub height: isize,
     pub state: GameState,
@@ -32,19 +32,11 @@ pub struct Game {
 impl Game {
     pub fn new(width: isize, height: isize) -> Self {
         let mut tiles = Vec::new();
-        for r in 0..height {
-            let mut row = Vec::new();
-            for c in 0..width {
-                let tile = tile::Tile::new(
-                    tile::TileType::Empty(0),
-                    c,
-                    r,
-                    width,
-                    height,
-                );
-                row.push(tile);
+
+        for y in 0..height {
+            for x in 0..width {
+                tiles.push(Tile::new(TileType::Empty(0), x, y, width, height));
             }
-            tiles.push(row);
         }
 
         Game {
@@ -94,7 +86,8 @@ impl Game {
                     }
                 });
 
-                self.get_tile_mut(x, y).tile_type = tile::TileType::Empty(bombs);
+                self.get_tile_mut(x, y).tile_type =
+                    tile::TileType::Empty(bombs);
             }
         }
     }
@@ -125,27 +118,23 @@ impl Game {
     }
 
     fn reveal_all(&mut self) {
-        self.tiles
-            .iter_mut()
-            .flatten()
-            .for_each(|tile| match tile.tile_type {
-                TileType::Bomb => {
-                    if !tile.is_exploded() && !tile.is_flagged() {
-                        tile.tile_state = TileState::Revealed;
-                    }
+        self.tiles.iter_mut().for_each(|tile| match tile.tile_type {
+            TileType::Bomb => {
+                if !tile.is_exploded() && !tile.is_flagged() {
+                    tile.tile_state = TileState::Revealed;
                 }
-                TileType::Empty(_) => {
-                    if tile.is_flagged() {
-                        tile.tile_state = TileState::WrongFlag;
-                    }
+            }
+            TileType::Empty(_) => {
+                if tile.is_flagged() {
+                    tile.tile_state = TileState::WrongFlag;
                 }
-            });
+            }
+        });
     }
 
     fn is_won(&self) -> bool {
         self.tiles
             .iter()
-            .flatten()
             .all(|tile| tile.is_revealed() || tile.is_bomb())
     }
 
@@ -158,7 +147,6 @@ impl Game {
         }
         self.tiles
             .iter_mut()
-            .flatten()
             .filter(|tile| tile.is_bomb())
             .for_each(|tile| tile.tile_state = TileState::Flagged);
     }
@@ -213,12 +201,7 @@ impl Game {
                 let x = x + x_offset;
                 let y = y + y_offset;
 
-                if x >= 0
-                    && x < self.width
-                    && y >= 0
-                    && y < self.height
-                {
-
+                if x >= 0 && x < self.width && y >= 0 && y < self.height {
                     let tile = self.get_tile(x, y).clone();
 
                     f(self, tile);
@@ -228,11 +211,7 @@ impl Game {
     }
 
     pub fn count_flags(&self) -> isize {
-        self.tiles
-            .iter()
-            .flatten()
-            .filter(|tile| tile.is_flagged())
-            .count() as isize
+        self.tiles.iter().filter(|tile| tile.is_flagged()).count() as isize
     }
 
     pub fn left_click(
@@ -373,18 +352,16 @@ impl Game {
     }
 
     pub fn get_tile(&self, x: isize, y: isize) -> &Tile {
-        &self.tiles[y as usize][x as usize]
+        &self.tiles[(y * self.width + x) as usize]
     }
 
     pub fn get_tile_mut(&mut self, x: isize, y: isize) -> &mut Tile {
-        &mut self.tiles[y as usize][x as usize]
+        &mut self.tiles[(y * self.width + x) as usize]
     }
 
     pub fn draw(&self, textures: &mut GameTextures) {
-        for row in &self.tiles {
-            for tile in row {
-                tile.draw(textures);
-            }
+        for tile in &self.tiles {
+            tile.draw(textures);
         }
     }
 }
