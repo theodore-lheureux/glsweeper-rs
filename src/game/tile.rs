@@ -31,17 +31,17 @@ pub struct Tile {
     pub tile_type: TileType,
     pub tile_state: TileState,
     pub vao: VAO,
-    pub x: usize,
-    pub y: usize,
+    pub x: isize,
+    pub y: isize,
 }
 
 impl Tile {
     pub fn new(
         tile_type: TileType,
-        x: usize,
-        y: usize,
-        game_width: usize,
-        game_height: usize,
+        x: isize,
+        y: isize,
+        game_width: isize,
+        game_height: isize,
     ) -> Self {
         let vao = generate_tile_vao(x, y, game_width, game_height);
 
@@ -116,7 +116,7 @@ impl Tile {
     }
 }
 
-fn generate_tile_vao(x: usize, y: usize, width: usize, height: usize) -> VAO {
+fn generate_tile_vao(x: isize, y: isize, width: isize, height: isize) -> VAO {
     let vao = VAO::new();
     vao.bind();
 

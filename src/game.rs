@@ -23,14 +23,14 @@ pub enum GameState {
 
 pub struct Game {
     pub tiles: Vec<Vec<tile::Tile>>,
-    pub width: usize,
-    pub height: usize,
+    pub width: isize,
+    pub height: isize,
     pub state: GameState,
-    pub mine_count: usize,
+    pub mine_count: isize,
 }
 
 impl Game {
-    pub fn new(width: usize, height: usize) -> Self {
+    pub fn new(width: isize, height: isize) -> Self {
         let mut tiles = Vec::new();
         for r in 0..height {
             let mut row = Vec::new();
@@ -56,7 +56,7 @@ impl Game {
         }
     }
 
-    fn place_mines(&mut self, start_x: usize, start_y: usize) {
+    fn place_mines(&mut self, start_x: isize, start_y: isize) {
         let mut mines = 0;
         while mines < self.mine_count {
             let (x, y) = random_coords(self.width, self.height);
@@ -69,11 +69,11 @@ impl Game {
                 && y >= start_y - 1
                 && y <= start_y + 1;
 
-            if is_adjacent || self.tiles[y][x].is_bomb() {
+            if is_adjacent || self.get_tile(x, y).is_bomb() {
                 continue;
             }
 
-            self.tiles[y][x].tile_type = TileType::Bomb;
+            self.get_tile_mut(x, y).tile_type = TileType::Bomb;
             mines += 1;
         }
         self.state = GameState::Playing(time::Instant::now());
@@ -83,7 +83,7 @@ impl Game {
     fn place_numbers(&mut self) {
         for y in 0..self.height {
             for x in 0..self.width {
-                if self.tiles[y][x].is_bomb() {
+                if self.get_tile(x, y).is_bomb() {
                     continue;
                 }
                 let bombs = self
@@ -92,13 +92,13 @@ impl Game {
                     .filter(|t| t.is_bomb())
                     .count() as u8;
 
-                self.tiles[y][x].tile_type = tile::TileType::Empty(bombs);
+                self.get_tile_mut(x, y).tile_type = tile::TileType::Empty(bombs);
             }
         }
     }
 
-    fn reveal_tile(&mut self, x: usize, y: usize) {
-        let tile = &mut self.tiles[y][x];
+    fn reveal_tile(&mut self, x: isize, y: isize) {
+        let tile = &mut self.get_tile_mut(x, y);
 
         if tile.is_revealed() || tile.is_flagged() {
             return;
@@ -120,15 +120,15 @@ impl Game {
                             continue;
                         }
 
-                        let x = x as isize + x_offset;
-                        let y = y as isize + y_offset;
+                        let x = x + x_offset;
+                        let y = y + y_offset;
 
                         if x >= 0
-                            && x < self.width as isize
+                            && x < self.width
                             && y >= 0
-                            && y < self.height as isize
+                            && y < self.height
                         {
-                            self.reveal_tile(x as usize, y as usize);
+                            self.reveal_tile(x, y);
                         }
                     }
                 }
@@ -176,12 +176,12 @@ impl Game {
             .for_each(|tile| tile.tile_state = TileState::Flagged);
     }
 
-    fn flag_tile(&mut self, x: usize, y: usize) {
-        self.tiles[y][x].toggle_flag();
+    fn flag_tile(&mut self, x: isize, y: isize) {
+        self.get_tile_mut(x, y).toggle_flag();
     }
 
-    fn revealed_clicked(&mut self, x: usize, y: usize) {
-        let tile = &mut self.tiles[y][x];
+    fn revealed_clicked(&mut self, x: isize, y: isize) {
+        let tile = &mut self.get_tile(x, y);
 
         if !tile.is_revealed() || tile.is_flagged() {
             return;
@@ -211,25 +211,24 @@ impl Game {
                         continue;
                     }
 
-                    let x = x as isize + x_offset;
-                    let y = y as isize + y_offset;
+                    let x = x + x_offset;
+                    let y = y + y_offset;
 
                     if x >= 0
-                        && x < self.width as isize
+                        && x < self.width
                         && y >= 0
-                        && y < self.height as isize
+                        && y < self.height
+                        && !self.get_tile(x, y).is_revealed()
+
                     {
-                        let tile = &mut self.tiles[y as usize][x as usize];
-                        if !tile.is_revealed() {
-                            self.reveal_tile(x as usize, y as usize);
-                        }
+                        self.reveal_tile(x, y);
                     }
                 }
             }
         }
     }
 
-    fn get_adjacent_tiles(&self, x: usize, y: usize) -> Vec<&Tile> {
+    fn get_adjacent_tiles(&self, x: isize, y: isize) -> Vec<&Tile> {
         let mut tiles = Vec::new();
 
         for x_offset in -1..2 {
@@ -238,15 +237,15 @@ impl Game {
                     continue;
                 }
 
-                let x = x as isize + x_offset;
-                let y = y as isize + y_offset;
+                let x = x + x_offset;
+                let y = y  + y_offset;
 
                 if x >= 0
-                    && x < self.width as isize
+                    && x < self.width
                     && y >= 0
-                    && y < self.height as isize
+                    && y < self.height
                 {
-                    tiles.push(&self.tiles[y as usize][x as usize]);
+                    tiles.push(self.get_tile(x, y));
                 }
             }
         }
@@ -254,12 +253,12 @@ impl Game {
         tiles
     }
 
-    pub fn count_flags(&self) -> usize {
+    pub fn count_flags(&self) -> isize {
         self.tiles
             .iter()
             .flatten()
             .filter(|tile| tile.is_flagged())
-            .count()
+            .count() as isize
     }
 
     pub fn left_click(
@@ -342,13 +341,11 @@ impl Game {
             return;
         }
 
-        let tile = &mut self.tiles[y][x];
-
         match self.state {
             GameState::Playing(_) | GameState::Start => (),
             _ => return,
         }
-        match tile.tile_state {
+        match self.get_tile(x, y).tile_state {
             TileState::Revealed => {
                 self.revealed_clicked(x, y);
                 self.check_for_win();
@@ -378,14 +375,14 @@ impl Game {
             return;
         }
 
-        let width = self.width as isize - WIDTH_INCREMENT as isize;
-        let height = self.height as isize - HEIGHT_INCREMENT as isize;
+        let width = self.width - WIDTH_INCREMENT;
+        let height = self.height - HEIGHT_INCREMENT;
 
-        if width < MIN_WIDTH as isize || height < MIN_HEIGHT as isize {
+        if width < MIN_WIDTH || height < MIN_HEIGHT {
             return;
         }
 
-        *self = Self::new(width as usize, height as usize);
+        *self = Self::new(width, height);
     }
 
     pub fn get_time_since_start(&self) -> Option<String> {
@@ -401,6 +398,14 @@ impl Game {
         }
     }
 
+    pub fn get_tile(&self, x: isize, y: isize) -> &Tile {
+        &self.tiles[y as usize][x as usize]
+    }
+
+    pub fn get_tile_mut(&mut self, x: isize, y: isize) -> &mut Tile {
+        &mut self.tiles[y as usize][x as usize]
+    }
+
     pub fn draw(&self, textures: &mut GameTextures) {
         for row in &self.tiles {
             for tile in row {
@@ -413,11 +418,11 @@ impl Game {
 fn tile_position(
     x_px: f64,
     y_px: f64,
-    width_tiles: usize,
-    height_tiles: usize,
+    width_tiles: isize,
+    height_tiles: isize,
     window_width: f64,
     window_height: f64,
-) -> (usize, usize) {
+) -> (isize, isize) {
     let width_tiles = width_tiles as f64;
     let height_tiles = height_tiles as f64;
     let (offset_x, offset_y) = (
@@ -428,21 +433,21 @@ fn tile_position(
     if window_width > window_height {
         let x = x_px - offset_x;
         (
-            (x / window_height * width_tiles) as usize,
-            (height_tiles - y_px / window_height * height_tiles) as usize,
+            (x / window_height * width_tiles) as isize,
+            (height_tiles - y_px / window_height * height_tiles) as isize,
         )
     } else {
         let y = y_px - offset_y;
         (
-            (x_px / window_width * width_tiles) as usize,
-            (height_tiles - y / window_width * height_tiles) as usize,
+            (x_px / window_width * width_tiles) as isize,
+            (height_tiles - y / window_width * height_tiles) as isize,
         )
     }
 }
 
-fn random_coords(width: usize, height: usize) -> (usize, usize) {
+fn random_coords(width: isize, height: isize) -> (isize, isize) {
     (
-        rand::random::<usize>() % width,
-        rand::random::<usize>() % height,
+        (rand::random::<usize>() % width as usize) as isize,
+        (rand::random::<usize>() % height as usize) as isize,
     )
 }
