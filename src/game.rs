@@ -49,7 +49,12 @@ impl Game {
     }
 
     fn place_mines(&mut self, start_x: isize, start_y: isize) {
+        if self.get_tile(start_x, start_y).is_flagged() {
+            return;
+        }
+
         let mut mines = 0;
+
         while mines < self.mine_count {
             let (x, y) = random_coords(self.width, self.height);
             let (start_x, start_y) = (
@@ -68,6 +73,7 @@ impl Game {
             self.get_tile_mut(x, y).tile_type = TileType::Bomb;
             mines += 1;
         }
+
         self.state = GameState::Playing(time::Instant::now());
         self.place_numbers();
     }
@@ -78,6 +84,7 @@ impl Game {
                 if self.get_tile(x, y).is_bomb() {
                     continue;
                 }
+                
                 let mut bombs = 0;
 
                 self.do_for_adjacent_tiles(x, y, |_, tile| {
