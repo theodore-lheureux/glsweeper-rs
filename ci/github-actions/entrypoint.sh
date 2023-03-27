@@ -2,7 +2,7 @@
 
 # dependencies
 
-sudo apt install -y libglfw3-dev xorg-dev libx11-dev libxss-dev libxxf86vm-dev libxkbfile-dev libxv-dev	
+sudo apt install -y libglfw3-dev xorg-dev libx11-dev libxss-dev libxxf86vm-dev libxkbfile-dev libxv-dev	gcc-mingw-w64-x86-64 musl
 
 set -eu
 
