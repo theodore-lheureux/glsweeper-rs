@@ -374,10 +374,11 @@ impl Game {
         textures.tile_unrevealed.bind(0);
 
         unsafe {
-            gl::DrawArrays(
+            gl::DrawElements(
                 gl::TRIANGLES,
-                0,
                 (6 * self.width * self.height) as i32,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
             );
         }
     }
