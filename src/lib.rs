@@ -2,13 +2,12 @@ use std::ptr;
 
 use graphics::gl_wrapper::VAO;
 
-pub mod custom_errors;
 pub mod game;
 pub mod graphics;
 pub mod logger;
 
-pub const DEFAULT_WIDTH: isize = 1000;
-pub const DEFAULT_HEIGHT: isize = 1000;
+pub const DEFAULT_WIDTH: isize = 400;
+pub const DEFAULT_HEIGHT: isize = 400;
 
 pub const MAX_WIDTH: isize = 950;
 pub const MAX_HEIGHT: isize = 950;

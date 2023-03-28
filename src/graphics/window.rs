@@ -69,8 +69,6 @@ impl Window {
             self.window.get_proc_address(symbol) as *const _
         });
 
-        self.glfw.set_swap_interval(glfw::SwapInterval::None);
-
         unsafe {
             gl::Viewport(
                 0,

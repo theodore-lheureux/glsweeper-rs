@@ -1,12 +1,14 @@
-use std::time;
+use std::{cell::RefCell, rc::Rc, time};
 
 use crate::{
-    graphics::gl_wrapper::VAO,
-    HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
-    WIDTH_INCREMENT,
+    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH,
+    MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
 };
 
-use self::{tile::{Tile, TileState, TileType}, tile_drawer::TileDrawer};
+use self::{
+    tile::{Tile, TileState, TileValue},
+    tile_drawer::TileDrawer,
+};
 
 mod coordinates;
 mod draw;
@@ -29,15 +31,25 @@ pub struct Game {
     tiles: Vec<tile::Tile>,
     _vao: VAO,
     tile_drawer: TileDrawer,
+    has_changed: Rc<RefCell<bool>>,
+    first_tile_changed: Rc<RefCell<isize>>,
 }
 
 impl Game {
     pub fn new(width: isize, height: isize) -> Self {
         let mut tiles = Vec::new();
+        let has_changed = Rc::new(RefCell::new(false));
+        let first_tile_changed = Rc::new(RefCell::new(0));
 
         for y in 0..height {
             for x in 0..width {
-                tiles.push(Tile::new(TileType::Empty(0), x, y));
+                tiles.push(Tile::new(
+                    TileValue::Empty(0),
+                    x,
+                    y,
+                    has_changed.clone(),
+                    first_tile_changed.clone(),
+                ));
             }
         }
 
@@ -55,6 +67,8 @@ impl Game {
             mine_count: width * height / 5,
             _vao,
             tile_drawer,
+            has_changed,
+            first_tile_changed,
         }
     }
 
@@ -78,7 +92,7 @@ impl Game {
                 continue;
             }
 
-            self.get_tile_mut(x, y).tile_type = TileType::Bomb;
+            self.get_tile_mut(x, y).set_value(TileValue::Bomb);
             mines += 1;
         }
     }
@@ -98,50 +112,51 @@ impl Game {
                     }
                 });
 
-                self.get_tile_mut(x, y).tile_type =
-                    tile::TileType::Empty(bombs);
+                self.get_tile_mut(x, y).set_value(TileValue::Empty(bombs));
             }
         }
     }
 
     fn reveal_tile(&mut self, x: isize, y: isize) {
-        let tile = &mut self.get_tile_mut(x, y);
+        let tile = self.get_tile_mut(x, y);
 
         if tile.is_revealed() || tile.is_flagged() {
             return;
         }
-        match tile.tile_type {
-            TileType::Bomb => {
-                tile.tile_state = TileState::Exploded;
+        match tile.get_value() {
+            TileValue::Bomb => {
+                tile.set_state(TileState::Exploded);
                 self.reveal_all();
                 if let GameState::Playing(start_time) = self.state {
                     self.state =
                         GameState::Lost(time::Instant::now() - start_time);
                 }
             }
-            TileType::Empty(0) => {
-                tile.reveal();
+            TileValue::Empty(0) => {
+                tile.set_state(TileState::Revealed);
                 self.do_for_adjacent_tiles(x, y, |game, tile| {
                     game.reveal_tile(tile.x, tile.y);
                 });
             }
-            _ => tile.reveal(),
+            _ => tile.set_state(TileState::Revealed),
         }
     }
 
     fn reveal_all(&mut self) {
-        self.tiles.iter_mut().for_each(|tile| match tile.tile_type {
-            TileType::Bomb => {
-                if !tile.is_exploded() && !tile.is_flagged() {
-                    tile.tile_state = TileState::Revealed;
+        self.tiles
+            .iter_mut()
+            .for_each(|tile| match tile.get_value() {
+                TileValue::Bomb => {
+                    if !tile.is_exploded() && !tile.is_flagged() {
+                        tile.set_state(TileState::Revealed);
+                    }
                 }
-            }
-            TileType::Empty(_) => {
-                if tile.is_flagged() {
-                    tile.tile_state = TileState::WrongFlag;
+                TileValue::Empty(_) => {
+                    if tile.is_flagged() {
+                        tile.set_state(TileState::WrongFlag);
+                    }
                 }
-            }
-        });
+            });
     }
 
     fn is_won(&self) -> bool {
@@ -163,7 +178,7 @@ impl Game {
         self.tiles
             .iter_mut()
             .filter(|tile| tile.is_bomb())
-            .for_each(|tile| tile.tile_state = TileState::Flagged);
+            .for_each(|tile| tile.set_state(TileState::Flagged));
     }
 
     fn flag_tile(&mut self, x: isize, y: isize) {
@@ -171,15 +186,15 @@ impl Game {
     }
 
     fn revealed_clicked(&mut self, x: isize, y: isize) {
-        let tile = &mut self.get_tile(x, y);
+        let tile = self.get_tile_mut(x, y);
 
         if !tile.is_revealed() || tile.is_flagged() {
             return;
         }
 
         let (bomb_count, mut flags) = (
-            match tile.tile_type {
-                TileType::Empty(bombs) => match bombs {
+            match tile.get_value() {
+                TileValue::Empty(bombs) => match bombs {
                     0 => return,
                     _ => bombs,
                 },
@@ -313,7 +328,7 @@ impl Game {
             GameState::Playing(_) | GameState::Start => (),
             _ => return,
         }
-        match self.get_tile(x, y).tile_state {
+        match self.get_tile(x, y).get_state() {
             TileState::Revealed => {
                 self.revealed_clicked(x, y);
                 self.check_for_win();
@@ -375,7 +390,8 @@ impl Game {
     }
 
     pub fn draw(&self) {
-        self.tile_drawer.update(&self.tiles);
+        self.tile_drawer
+            .update(&self.tiles, self.has_changed.borrow().to_owned());
 
         unsafe {
             gl::DrawElements(
@@ -385,5 +401,8 @@ impl Game {
                 std::ptr::null(),
             );
         }
+
+        *self.has_changed.borrow_mut() = false;
+        *self.first_tile_changed.borrow_mut() = self.tiles.len() as isize;
     }
 }

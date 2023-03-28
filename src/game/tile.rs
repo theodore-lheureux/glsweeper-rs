@@ -1,5 +1,7 @@
+use std::{cell::RefCell, rc::Rc};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TileType {
+pub enum TileValue {
     Bomb,
     Empty(u8),
 }
@@ -15,28 +17,38 @@ pub enum TileState {
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Tile {
-    pub tile_type: TileType,
-    pub tile_state: TileState,
     pub x: isize,
     pub y: isize,
+    tile_value: TileValue,
+    tile_state: TileState,
+    has_changed: Rc<RefCell<bool>>,
+    first_tile_changed: Rc<RefCell<isize>>,
 }
 
 impl Tile {
-    pub fn new(tile_type: TileType, x: isize, y: isize) -> Self {
+    pub fn new(
+        tile_value: TileValue,
+        x: isize,
+        y: isize,
+        has_changed: Rc<RefCell<bool>>,
+        first_tile_changed: Rc<RefCell<isize>>,
+    ) -> Self {
         Tile {
-            tile_type,
+            tile_value,
             tile_state: TileState::Unrevealed,
             x,
             y,
+            has_changed,
+            first_tile_changed,
         }
     }
 
     pub fn is_bomb(&self) -> bool {
-        matches!(self.tile_type, TileType::Bomb)
+        matches!(self.tile_value, TileValue::Bomb)
     }
 
     pub fn is_empty(&self) -> bool {
-        matches!(self.tile_type, TileType::Empty(0))
+        matches!(self.tile_value, TileValue::Empty(0))
     }
 
     pub fn is_hidden(&self) -> bool {
@@ -55,8 +67,22 @@ impl Tile {
         matches!(self.tile_state, TileState::Exploded)
     }
 
-    pub fn reveal(&mut self) {
-        self.tile_state = TileState::Revealed;
+    pub fn get_state(&self) -> TileState {
+        self.tile_state
+    }
+
+    pub fn get_value(&self) -> TileValue {
+        self.tile_value
+    }
+
+    pub fn set_state(&mut self, state: TileState) {
+        self.tile_state = state;
+        *self.has_changed.borrow_mut() = true;
+    }
+
+    pub fn set_value(&mut self, value: TileValue) {
+        self.tile_value = value;
+        *self.has_changed.borrow_mut() = true;
     }
 
     pub fn toggle_flag(&mut self) {
@@ -65,20 +91,24 @@ impl Tile {
             TileState::Flagged => self.tile_state = TileState::Unrevealed,
             _ => (),
         }
+        *self.has_changed.borrow_mut() = true;
     }
 
     pub fn unflag(&mut self) {
         self.tile_state = TileState::Unrevealed;
+        *self.has_changed.borrow_mut() = true;
     }
 }
 
 impl Clone for Tile {
     fn clone(&self) -> Self {
         Tile {
-            tile_type: self.tile_type,
+            tile_value: self.tile_value,
             tile_state: self.tile_state,
             x: self.x,
             y: self.y,
+            has_changed: self.has_changed.clone(),
+            first_tile_changed: self.first_tile_changed.clone(),
         }
     }
 }
