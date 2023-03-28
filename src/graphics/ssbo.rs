@@ -29,8 +29,7 @@ impl SSBO {
         unsafe {
             gl::BufferData(
                 gl::SHADER_STORAGE_BUFFER,
-                (data.len() * std::mem::size_of::<f32>())
-                    as gl::types::GLsizeiptr,
+                (data.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
                 data.as_ptr() as *const gl::types::GLvoid,
                 gl::DYNAMIC_DRAW,
             );
@@ -43,13 +42,12 @@ impl SSBO {
         }
     }
 
-    pub fn bind_buffer_sub_data(&self, offset: usize, data: &[f32]) {
+    pub fn bind_buffer_sub_data(&self, offset: isize, data: &[f32]) {
         unsafe {
             gl::BufferSubData(
                 gl::SHADER_STORAGE_BUFFER,
-                offset as isize,
-                (data.len() * std::mem::size_of::<f32>())
-                    as gl::types::GLsizeiptr,
+                offset,
+                (data.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
                 data.as_ptr() as *const gl::types::GLvoid,
             );
         }

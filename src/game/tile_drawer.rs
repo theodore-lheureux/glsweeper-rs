@@ -9,27 +9,38 @@ pub struct TileDrawer {
 }
 
 impl TileDrawer {
-    pub fn new() -> Self {
+    pub fn new(tiles: &[Tile]) -> Self {
         let ssbo = SSBO::new();
+        ssbo.bind();
+        ssbo.bind_buffer_base(0);
+
+        let data = tiles
+            .iter()
+            .map(|tile| get_texture_offset(tile))
+            .collect::<Vec<f32>>();
+
+        ssbo.bind_buffer_data(&data);
+
         TileDrawer { ssbo }
     }
-
-    pub fn bind_ssbo(&self) {
-        self.ssbo.bind();
-        self.ssbo.bind_buffer_base(0);
-    }
-
-    pub fn update(&self, tiles: &[Tile], has_changed: bool) {
-        if !has_changed {
+    pub fn update(&self, tiles: &[Tile], tiles_changed: &[isize]) {
+        if tiles_changed.is_empty() {
             return;
         }
 
         let start = time::Instant::now();
-        let data: Vec<f32> =
-            tiles.iter().map(|tile| get_texture_offset(tile)).collect();
+        let first_index_changed = *tiles_changed.iter().min().unwrap();
+        let data: Vec<f32> = tiles
+            .iter()
+            .skip(first_index_changed as usize)
+            .map(|tile| get_texture_offset(tile))
+            .collect();
 
-        self.ssbo.bind_buffer_data(&data);
-        print!("SSBO update took {:?}, ", start.elapsed());
+        self.ssbo.bind_buffer_sub_data(
+            first_index_changed * std::mem::size_of::<f32>() as isize,
+            &data,
+        );
+        println!("SSBO update took {:?}, ", start.elapsed());
     }
 }
 

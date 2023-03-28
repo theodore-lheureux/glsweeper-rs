@@ -1,8 +1,8 @@
 use std::{cell::RefCell, rc::Rc, time};
 
 use crate::{
-    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH,
-    MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
+    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
+    WIDTH_INCREMENT,
 };
 
 use self::{
@@ -31,15 +31,13 @@ pub struct Game {
     tiles: Vec<tile::Tile>,
     _vao: VAO,
     tile_drawer: TileDrawer,
-    has_changed: Rc<RefCell<bool>>,
-    first_tile_changed: Rc<RefCell<isize>>,
+    tiles_changed: Rc<RefCell<Vec<isize>>>,
 }
 
 impl Game {
     pub fn new(width: isize, height: isize) -> Self {
         let mut tiles = Vec::new();
-        let has_changed = Rc::new(RefCell::new(false));
-        let first_tile_changed = Rc::new(RefCell::new(0));
+        let tiles_changed = Rc::new(RefCell::new(Vec::new()));
 
         for y in 0..height {
             for x in 0..width {
@@ -47,17 +45,16 @@ impl Game {
                     TileValue::Empty(0),
                     x,
                     y,
-                    has_changed.clone(),
-                    first_tile_changed.clone(),
+                    tiles_changed.clone(),
+                    width,
                 ));
             }
         }
 
         let _vao = draw::generate_game_vao(width, height);
-        let tile_drawer = TileDrawer::new();
+        let tile_drawer = TileDrawer::new(&tiles);
 
         _vao.bind();
-        tile_drawer.bind_ssbo();
 
         Game {
             tiles,
@@ -67,8 +64,7 @@ impl Game {
             mine_count: width * height / 5,
             _vao,
             tile_drawer,
-            has_changed,
-            first_tile_changed,
+            tiles_changed,
         }
     }
 
@@ -128,8 +124,7 @@ impl Game {
                 tile.set_state(TileState::Exploded);
                 self.reveal_all();
                 if let GameState::Playing(start_time) = self.state {
-                    self.state =
-                        GameState::Lost(time::Instant::now() - start_time);
+                    self.state = GameState::Lost(time::Instant::now() - start_time);
                 }
             }
             TileValue::Empty(0) => {
@@ -244,13 +239,7 @@ impl Game {
         self.tiles.iter().filter(|tile| tile.is_flagged()).count() as isize
     }
 
-    pub fn left_click(
-        &mut self,
-        x_px: f64,
-        y_px: f64,
-        window_width: f64,
-        window_height: f64,
-    ) {
+    pub fn left_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
         let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
@@ -279,13 +268,7 @@ impl Game {
         }
     }
 
-    pub fn right_click(
-        &mut self,
-        x_px: f64,
-        y_px: f64,
-        window_width: f64,
-        window_height: f64,
-    ) {
+    pub fn right_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
         let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
@@ -304,13 +287,7 @@ impl Game {
         }
     }
 
-    pub fn space_click(
-        &mut self,
-        x_px: f64,
-        y_px: f64,
-        window_width: f64,
-        window_height: f64,
-    ) {
+    pub fn space_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
         let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
@@ -391,7 +368,7 @@ impl Game {
 
     pub fn draw(&self) {
         self.tile_drawer
-            .update(&self.tiles, self.has_changed.borrow().to_owned());
+            .update(&self.tiles, self.tiles_changed.borrow().as_slice());
 
         unsafe {
             gl::DrawElements(
@@ -402,7 +379,6 @@ impl Game {
             );
         }
 
-        *self.has_changed.borrow_mut() = false;
-        *self.first_tile_changed.borrow_mut() = self.tiles.len() as isize;
+        *self.tiles_changed.borrow_mut() = Vec::new();
     }
 }

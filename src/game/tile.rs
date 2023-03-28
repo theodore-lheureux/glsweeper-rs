@@ -21,8 +21,8 @@ pub struct Tile {
     pub y: isize,
     tile_value: TileValue,
     tile_state: TileState,
-    has_changed: Rc<RefCell<bool>>,
-    first_tile_changed: Rc<RefCell<isize>>,
+    tiles_changed: Rc<RefCell<Vec<isize>>>,
+    game_width: isize,
 }
 
 impl Tile {
@@ -30,16 +30,16 @@ impl Tile {
         tile_value: TileValue,
         x: isize,
         y: isize,
-        has_changed: Rc<RefCell<bool>>,
-        first_tile_changed: Rc<RefCell<isize>>,
+        tiles_changed: Rc<RefCell<Vec<isize>>>,
+        game_width: isize,
     ) -> Self {
         Tile {
             tile_value,
             tile_state: TileState::Unrevealed,
             x,
             y,
-            has_changed,
-            first_tile_changed,
+            tiles_changed,
+            game_width,
         }
     }
 
@@ -77,12 +77,12 @@ impl Tile {
 
     pub fn set_state(&mut self, state: TileState) {
         self.tile_state = state;
-        *self.has_changed.borrow_mut() = true;
+        self.changed();
     }
 
     pub fn set_value(&mut self, value: TileValue) {
         self.tile_value = value;
-        *self.has_changed.borrow_mut() = true;
+        self.changed();
     }
 
     pub fn toggle_flag(&mut self) {
@@ -91,12 +91,18 @@ impl Tile {
             TileState::Flagged => self.tile_state = TileState::Unrevealed,
             _ => (),
         }
-        *self.has_changed.borrow_mut() = true;
+        self.changed();
     }
 
     pub fn unflag(&mut self) {
         self.tile_state = TileState::Unrevealed;
-        *self.has_changed.borrow_mut() = true;
+        self.changed();
+    }
+
+    fn changed(&mut self) {
+        self.tiles_changed
+            .borrow_mut()
+            .push(self.x + self.y * self.game_width);
     }
 }
 
@@ -107,8 +113,8 @@ impl Clone for Tile {
             tile_state: self.tile_state,
             x: self.x,
             y: self.y,
-            has_changed: self.has_changed.clone(),
-            first_tile_changed: self.first_tile_changed.clone(),
+            tiles_changed: self.tiles_changed.clone(),
+            game_width: self.game_width,
         }
     }
 }
