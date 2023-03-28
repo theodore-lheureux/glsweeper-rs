@@ -1,11 +1,11 @@
 use gl::types::GLuint;
 
-struct SSBO {
+pub struct SSBO {
     id: GLuint,
 }
 
 impl SSBO {
-    pub fn new(size: usize) -> Self {
+    pub fn new() -> Self {
         let mut id = 0;
         unsafe {
             gl::GenBuffers(1, &mut id);

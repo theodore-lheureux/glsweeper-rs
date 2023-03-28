@@ -1,16 +1,17 @@
 use std::time;
 
 use crate::{
-    graphics::{gl_wrapper::VAO, texture::Texture},
+    graphics::gl_wrapper::VAO,
     HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
     WIDTH_INCREMENT,
 };
 
-use self::tile::{Tile, TileState, TileType};
+use self::{tile::{Tile, TileState, TileType}, tile_drawer::TileDrawer};
 
 mod coordinates;
 mod draw;
 mod tile;
+mod tile_drawer;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GameState {
@@ -21,12 +22,13 @@ pub enum GameState {
 }
 
 pub struct Game {
-    pub tiles: Vec<tile::Tile>,
+    pub state: GameState,
     pub width: isize,
     pub height: isize,
-    pub state: GameState,
     pub mine_count: isize,
-    vao: VAO,
+    tiles: Vec<tile::Tile>,
+    _vao: VAO,
+    tile_drawer: TileDrawer,
 }
 
 impl Game {
@@ -39,13 +41,20 @@ impl Game {
             }
         }
 
+        let _vao = draw::generate_game_vao(width, height);
+        let tile_drawer = TileDrawer::new();
+
+        _vao.bind();
+        tile_drawer.bind_ssbo();
+
         Game {
             tiles,
             width,
             height,
             state: GameState::Start,
             mine_count: width * height / 5,
-            vao: draw::generate_game_vao(width, height),
+            _vao,
+            tile_drawer,
         }
     }
 
@@ -366,7 +375,7 @@ impl Game {
     }
 
     pub fn draw(&self) {
-        self.vao.bind();
+        self.tile_drawer.update(&self.tiles);
 
         unsafe {
             gl::DrawElements(

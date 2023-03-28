@@ -7,10 +7,10 @@ use crate::graphics::gl_wrapper::{VertexAttribute, EBO, VAO, VBO};
 pub fn generate_game_vao(width: isize, height: isize) -> VAO {
     let mut vertices: Vec<f32> = Vec::new();
     let mut indices: Vec<u32> = Vec::new();
-    let mut pos = 0.0;
 
     for x in 0..width {
         for y in 0..height {
+            let pos = (x + y * width) as f32;
             let (x, y, width) = (x as u32, y as u32, width as u32);
 
             indices.extend_from_slice(&[
@@ -49,8 +49,6 @@ pub fn generate_game_vao(width: isize, height: isize) -> VAO {
                 0.0,
                 pos, // bottom right
             ]);
-
-            pos += 0.005;
         }
     }
 

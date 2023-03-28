@@ -35,9 +35,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tile_shader.use_program();
 
     while !window.should_close() {
+        let start = std::time::Instant::now();
         clear_draw(0.3, 0.3, 0.3, 1.0);
         current_game.draw();
         window.update(&mut current_game);
+        println!("Frame took {}ms", start.elapsed().as_millis());
     }
 
     Ok(())

@@ -26,7 +26,6 @@ impl Window {
 
         window.set_key_polling(true);
         window.set_framebuffer_size_polling(true);
-        // window.set_aspect_ratio(1, 1);
         window.set_cursor_pos_polling(true);
         window.set_cursor_mode(glfw::CursorMode::Normal);
         window.set_mouse_button_polling(true);
@@ -69,6 +68,9 @@ impl Window {
         gl::load_with(|symbol| {
             self.window.get_proc_address(symbol) as *const _
         });
+
+        self.glfw.set_swap_interval(glfw::SwapInterval::None);
+
         unsafe {
             gl::Viewport(
                 0,
