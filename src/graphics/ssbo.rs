@@ -4,6 +4,7 @@ pub struct SSBO {
     id: GLuint,
 }
 
+#[allow(clippy::new_without_default)]
 impl SSBO {
     pub fn new() -> Self {
         let mut id = 0;

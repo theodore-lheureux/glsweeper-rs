@@ -16,7 +16,7 @@ impl TileDrawer {
 
         let data = tiles
             .iter()
-            .map(|tile| get_texture_offset(tile))
+            .map(get_texture_offset)
             .collect::<Vec<f32>>();
 
         ssbo.bind_buffer_data(&data);
@@ -29,17 +29,16 @@ impl TileDrawer {
         }
 
         let start = time::Instant::now();
-        let (first_index_changed, last_index_changed) = tiles_changed
-            .iter()
-            .fold((tiles_changed[0], tiles_changed[0]), |(min, max), &index| {
-                (min.min(index), max.max(index))
-            });
+        let (first_index_changed, last_index_changed) = tiles_changed.iter().fold(
+            (tiles_changed[0], tiles_changed[0]),
+            |(min, max), &index| (min.min(index), max.max(index)),
+        );
 
         let data: Vec<f32> = tiles
             .iter()
             .skip(first_index_changed as usize)
             .take((last_index_changed - first_index_changed + 1) as usize)
-            .map(|tile| get_texture_offset(tile))
+            .map(get_texture_offset)
             .collect();
 
         self.ssbo.bind_buffer_sub_data(

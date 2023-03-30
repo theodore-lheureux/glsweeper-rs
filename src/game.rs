@@ -89,10 +89,8 @@ impl Game {
                 if start_y == 0 { 1 } else { start_y },
             );
 
-            let is_adjacent = x >= start_x - 1
-                && x <= start_x + 1
-                && y >= start_y - 1
-                && y <= start_y + 1;
+            let is_adjacent =
+                x >= start_x - 1 && x <= start_x + 1 && y >= start_y - 1 && y <= start_y + 1;
 
             if is_adjacent || self.get_tile(x, y).is_bomb() {
                 continue;
