@@ -73,18 +73,28 @@ impl Game {
             return;
         }
 
-        self.place_mines();
+        self.place_mines(start_x, start_y);
         self.place_numbers();
         self.state = GameState::Playing(time::Instant::now());
     }
 
-    fn place_mines(&mut self) {
+    fn place_mines(&mut self, start_x: isize, start_y: isize) {
         let mut mines = 0;
 
         while mines < self.mine_count {
             let (x, y) = coordinates::random_coords(self.width, self.height);
 
-            if self.get_tile(x, y).is_bomb() {
+            let (start_x, start_y) = (
+                if start_x == 0 { 1 } else { start_x },
+                if start_y == 0 { 1 } else { start_y },
+            );
+
+            let is_adjacent = x >= start_x - 1
+                && x <= start_x + 1
+                && y >= start_y - 1
+                && y <= start_y + 1;
+
+            if is_adjacent || self.get_tile(x, y).is_bomb() {
                 continue;
             }
 
