@@ -2,7 +2,6 @@ use std::ptr;
 
 use graphics::gl_wrapper::VAO;
 
-pub mod custom_errors;
 pub mod game;
 pub mod graphics;
 pub mod logger;

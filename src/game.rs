@@ -1,17 +1,19 @@
-use std::time;
+use std::{cell::RefCell, rc::Rc, time};
 
 use crate::{
-    HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
+    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
     WIDTH_INCREMENT,
 };
 
 use self::{
-    game_textures::GameTextures,
-    tile::{Tile, TileState, TileType},
+    tile::{Tile, TileState, TileValue},
+    tile_drawer::TileDrawer,
 };
 
-pub mod game_textures;
-pub mod tile;
+mod coordinates;
+mod draw;
+mod tile;
+mod tile_drawer;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GameState {
@@ -22,22 +24,37 @@ pub enum GameState {
 }
 
 pub struct Game {
-    pub tiles: Vec<tile::Tile>,
+    pub state: GameState,
     pub width: isize,
     pub height: isize,
-    pub state: GameState,
     pub mine_count: isize,
+    tiles: Vec<tile::Tile>,
+    _vao: VAO,
+    tile_drawer: TileDrawer,
+    tiles_changed: Rc<RefCell<Vec<isize>>>,
 }
 
 impl Game {
     pub fn new(width: isize, height: isize) -> Self {
         let mut tiles = Vec::new();
+        let tiles_changed = Rc::new(RefCell::new(Vec::new()));
 
         for y in 0..height {
             for x in 0..width {
-                tiles.push(Tile::new(TileType::Empty(0), x, y, width, height));
+                tiles.push(Tile::new(
+                    TileValue::Empty(0),
+                    x,
+                    y,
+                    tiles_changed.clone(),
+                    width,
+                ));
             }
         }
+
+        let _vao = draw::generate_game_vao(width, height);
+        let tile_drawer = TileDrawer::new(&tiles);
+
+        _vao.bind();
 
         Game {
             tiles,
@@ -45,6 +62,9 @@ impl Game {
             height,
             state: GameState::Start,
             mine_count: width * height / 5,
+            _vao,
+            tile_drawer,
+            tiles_changed,
         }
     }
 
@@ -53,22 +73,30 @@ impl Game {
             return;
         }
 
-        self.place_mines();
+        self.place_mines(start_x, start_y);
         self.place_numbers();
         self.state = GameState::Playing(time::Instant::now());
     }
 
-    fn place_mines(&mut self) {
+    fn place_mines(&mut self, start_x: isize, start_y: isize) {
         let mut mines = 0;
 
         while mines < self.mine_count {
-            let (x, y) = random_coords(self.width, self.height);
+            let (x, y) = coordinates::random_coords(self.width, self.height);
 
-            if self.get_tile(x, y).is_bomb() {
+            let (start_x, start_y) = (
+                if start_x == 0 { 1 } else { start_x },
+                if start_y == 0 { 1 } else { start_y },
+            );
+
+            let is_adjacent =
+                x >= start_x - 1 && x <= start_x + 1 && y >= start_y - 1 && y <= start_y + 1;
+
+            if is_adjacent || self.get_tile(x, y).is_bomb() {
                 continue;
             }
 
-            self.get_tile_mut(x, y).tile_type = TileType::Bomb;
+            self.get_tile_mut(x, y).set_value(TileValue::Bomb);
             mines += 1;
         }
     }
@@ -79,7 +107,7 @@ impl Game {
                 if self.get_tile(x, y).is_bomb() {
                     continue;
                 }
-                
+
                 let mut bombs = 0;
 
                 self.do_for_adjacent_tiles(x, y, |_, tile| {
@@ -88,50 +116,50 @@ impl Game {
                     }
                 });
 
-                self.get_tile_mut(x, y).tile_type =
-                    tile::TileType::Empty(bombs);
+                self.get_tile_mut(x, y).set_value(TileValue::Empty(bombs));
             }
         }
     }
 
     fn reveal_tile(&mut self, x: isize, y: isize) {
-        let tile = &mut self.get_tile_mut(x, y);
+        let tile = self.get_tile_mut(x, y);
 
         if tile.is_revealed() || tile.is_flagged() {
             return;
         }
-        match tile.tile_type {
-            TileType::Bomb => {
-                tile.tile_state = TileState::Exploded;
+        match tile.get_value() {
+            TileValue::Bomb => {
+                tile.set_state(TileState::Exploded);
                 self.reveal_all();
                 if let GameState::Playing(start_time) = self.state {
-                    self.state =
-                        GameState::Lost(time::Instant::now() - start_time);
+                    self.state = GameState::Lost(time::Instant::now() - start_time);
                 }
             }
-            TileType::Empty(0) => {
-                tile.reveal();
+            TileValue::Empty(0) => {
+                tile.set_state(TileState::Revealed);
                 self.do_for_adjacent_tiles(x, y, |game, tile| {
                     game.reveal_tile(tile.x, tile.y);
                 });
             }
-            _ => tile.reveal(),
+            _ => tile.set_state(TileState::Revealed),
         }
     }
 
     fn reveal_all(&mut self) {
-        self.tiles.iter_mut().for_each(|tile| match tile.tile_type {
-            TileType::Bomb => {
-                if !tile.is_exploded() && !tile.is_flagged() {
-                    tile.tile_state = TileState::Revealed;
+        self.tiles
+            .iter_mut()
+            .for_each(|tile| match tile.get_value() {
+                TileValue::Bomb => {
+                    if !tile.is_exploded() && !tile.is_flagged() {
+                        tile.set_state(TileState::Revealed);
+                    }
                 }
-            }
-            TileType::Empty(_) => {
-                if tile.is_flagged() {
-                    tile.tile_state = TileState::WrongFlag;
+                TileValue::Empty(_) => {
+                    if tile.is_flagged() {
+                        tile.set_state(TileState::WrongFlag);
+                    }
                 }
-            }
-        });
+            });
     }
 
     fn is_won(&self) -> bool {
@@ -153,7 +181,7 @@ impl Game {
         self.tiles
             .iter_mut()
             .filter(|tile| tile.is_bomb())
-            .for_each(|tile| tile.tile_state = TileState::Flagged);
+            .for_each(|tile| tile.set_state(TileState::Flagged));
     }
 
     fn flag_tile(&mut self, x: isize, y: isize) {
@@ -161,15 +189,15 @@ impl Game {
     }
 
     fn revealed_clicked(&mut self, x: isize, y: isize) {
-        let tile = &mut self.get_tile(x, y);
+        let tile = self.get_tile_mut(x, y);
 
         if !tile.is_revealed() || tile.is_flagged() {
             return;
         }
 
         let (bomb_count, mut flags) = (
-            match tile.tile_type {
-                TileType::Empty(bombs) => match bombs {
+            match tile.get_value() {
+                TileValue::Empty(bombs) => match bombs {
                     0 => return,
                     _ => bombs,
                 },
@@ -219,14 +247,8 @@ impl Game {
         self.tiles.iter().filter(|tile| tile.is_flagged()).count() as isize
     }
 
-    pub fn left_click(
-        &mut self,
-        x_px: f64,
-        y_px: f64,
-        window_width: f64,
-        window_height: f64,
-    ) {
-        let (x, y) = tile_position(
+    pub fn left_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
+        let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
             self.width,
@@ -254,14 +276,8 @@ impl Game {
         }
     }
 
-    pub fn right_click(
-        &mut self,
-        x_px: f64,
-        y_px: f64,
-        window_width: f64,
-        window_height: f64,
-    ) {
-        let (x, y) = tile_position(
+    pub fn right_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
+        let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
             self.width,
@@ -279,14 +295,8 @@ impl Game {
         }
     }
 
-    pub fn space_click(
-        &mut self,
-        x_px: f64,
-        y_px: f64,
-        window_width: f64,
-        window_height: f64,
-    ) {
-        let (x, y) = tile_position(
+    pub fn space_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
+        let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
             self.width,
@@ -303,7 +313,7 @@ impl Game {
             GameState::Playing(_) | GameState::Start => (),
             _ => return,
         }
-        match self.get_tile(x, y).tile_state {
+        match self.get_tile(x, y).get_state() {
             TileState::Revealed => {
                 self.revealed_clicked(x, y);
                 self.check_for_win();
@@ -364,46 +374,19 @@ impl Game {
         &mut self.tiles[(y * self.width + x) as usize]
     }
 
-    pub fn draw(&self, textures: &mut GameTextures) {
-        for tile in &self.tiles {
-            tile.draw(textures);
+    pub fn draw(&self) {
+        self.tile_drawer
+            .update(&self.tiles, self.tiles_changed.borrow().as_slice());
+
+        unsafe {
+            gl::DrawElements(
+                gl::TRIANGLES,
+                (6 * self.width * self.height) as i32,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
+            );
         }
+
+        *self.tiles_changed.borrow_mut() = Vec::new();
     }
-}
-
-fn tile_position(
-    x_px: f64,
-    y_px: f64,
-    width_tiles: isize,
-    height_tiles: isize,
-    window_width: f64,
-    window_height: f64,
-) -> (isize, isize) {
-    let width_tiles = width_tiles as f64;
-    let height_tiles = height_tiles as f64;
-    let (offset_x, offset_y) = (
-        (window_width - window_height) / 2.0,
-        (window_height - window_width) / 2.0,
-    );
-
-    if window_width > window_height {
-        let x = x_px - offset_x;
-        (
-            (x / window_height * width_tiles) as isize,
-            (height_tiles - y_px / window_height * height_tiles) as isize,
-        )
-    } else {
-        let y = y_px - offset_y;
-        (
-            (x_px / window_width * width_tiles) as isize,
-            (height_tiles - y / window_width * height_tiles) as isize,
-        )
-    }
-}
-
-fn random_coords(width: isize, height: isize) -> (isize, isize) {
-    (
-        (rand::random::<usize>() % width as usize) as isize,
-        (rand::random::<usize>() % height as usize) as isize,
-    )
 }

@@ -15,7 +15,7 @@ impl Window {
     pub fn new(width: u32, height: u32, title: &str) -> Window {
         let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
 
-        glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
+        glfw.window_hint(glfw::WindowHint::ContextVersion(4, 3));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(
             glfw::OpenGlProfileHint::Core,
         ));
@@ -26,7 +26,6 @@ impl Window {
 
         window.set_key_polling(true);
         window.set_framebuffer_size_polling(true);
-        // window.set_aspect_ratio(1, 1);
         window.set_cursor_pos_polling(true);
         window.set_cursor_mode(glfw::CursorMode::Normal);
         window.set_mouse_button_polling(true);
@@ -66,9 +65,8 @@ impl Window {
 
     pub fn init_gl(&mut self) {
         self.window.make_current();
-        gl::load_with(|symbol| {
-            self.window.get_proc_address(symbol) as *const _
-        });
+        gl::load_with(|symbol| self.window.get_proc_address(symbol) as *const _);
+
         unsafe {
             gl::Viewport(
                 0,
@@ -176,9 +174,7 @@ impl Window {
                 let millis = game_duration.subsec_millis();
                 let time = format!("{}.{}", seconds, millis);
                 self.window.set_title(
-                    &("Minesweeper | You won! | You took ".to_owned()
-                        + &*time
-                        + " seconds"),
+                    &("Minesweeper | You won! | You took ".to_owned() + &*time + " seconds"),
                 );
             }
             GameState::Lost(game_duration) => {
@@ -186,9 +182,7 @@ impl Window {
                 let millis = game_duration.subsec_millis();
                 let time = format!("{}.{}", seconds, millis);
                 self.window.set_title(
-                    &("Minesweeper | You lost! | You took ".to_owned()
-                        + &*time
-                        + " seconds"),
+                    &("Minesweeper | You lost! | You took ".to_owned() + &*time + " seconds"),
                 );
             }
             GameState::Playing(_) => {
