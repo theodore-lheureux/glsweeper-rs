@@ -14,10 +14,7 @@ impl TileDrawer {
         ssbo.bind();
         ssbo.bind_buffer_base(0);
 
-        let data = tiles
-            .iter()
-            .map(get_texture_offset)
-            .collect::<Vec<f32>>();
+        let data = tiles.iter().map(get_texture_offset).collect::<Vec<f32>>();
 
         ssbo.bind_buffer_data(&data);
 

@@ -47,6 +47,7 @@ impl Shader {
                     error.as_ptr() as *mut gl::types::GLchar,
                 );
             }
+            println!("{}", error.to_string_lossy().into_owned());
             panic!("{}", error.to_string_lossy().into_owned());
         }
 
