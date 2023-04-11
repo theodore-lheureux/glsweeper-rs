@@ -21,22 +21,28 @@ impl Texture {
         };
 
         unsafe {
-            gl::TexStorage3D(
+            gl::TexStorage3D(gl::TEXTURE_2D_ARRAY, 3, gl::RGB8, 32, 32, 14);
+
+            gl::TexParameteri(
                 gl::TEXTURE_2D_ARRAY,
-                3,
-                gl::RGB8,
-                32,
-                32,
-                14,
+                gl::TEXTURE_WRAP_S,
+                gl::REPEAT as i32,
             );
-            
-            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_BASE_LEVEL, 0);
-            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_MAX_LEVEL, 3);
-            
+            gl::TexParameteri(
+                gl::TEXTURE_2D_ARRAY,
+                gl::TEXTURE_WRAP_T,
+                gl::REPEAT as i32,
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D_ARRAY,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR as i32,
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D_ARRAY,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32,
+            );
 
             for i in 0..14 {
                 gl::TexSubImage3D(
@@ -50,10 +56,10 @@ impl Texture {
                     1,
                     gl::RGB,
                     gl::UNSIGNED_BYTE,
-                    image_file.as_ptr().add((i * 32 * 32 * 3) as usize) as *const _,
+                    image_file.as_ptr().add((i * 32 * 32 * 3) as usize)
+                        as *const _,
                 );
             }
-            gl::GenerateMipmap(gl::TEXTURE_2D_ARRAY);
         }
 
         texture.unbind();
