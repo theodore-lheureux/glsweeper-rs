@@ -5,7 +5,7 @@ out vec4 FragColor;
 in vec2 TexCoords;
 in float Pos;
 
-uniform sampler3D atlasTexture;
+uniform sampler2DArray atlasTexture;
 
 layout(std430, binding = 0) buffer TextureSSBO {
     float textureData[];
@@ -13,7 +13,7 @@ layout(std430, binding = 0) buffer TextureSSBO {
 
 void main() 
 {  
-    vec3 texCoords = vec3(TexCoords.x, TexCoords.y, (textureData[int(Pos)] + 0.5) / 14.0);
+    vec3 texCoords = vec3(TexCoords.x, TexCoords.y, textureData[int(Pos)]);
     vec4 color = texture(atlasTexture, texCoords);
 
     FragColor = color;

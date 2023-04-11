@@ -12,7 +12,7 @@ impl Texture {
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::ActiveTexture(gl::TEXTURE0 + unit);
-            gl::BindTexture(gl::TEXTURE_3D, id);
+            gl::BindTexture(gl::TEXTURE_2D_ARRAY, id);
         }
 
         let mut texture = Texture {
@@ -21,24 +21,39 @@ impl Texture {
         };
 
         unsafe {
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE as i32);
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_MAG_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
-            gl::TexImage3D(
-                gl::TEXTURE_3D,
-                0,
-                gl::RGB as i32,
+            gl::TexStorage3D(
+                gl::TEXTURE_2D_ARRAY,
+                3,
+                gl::RGB8,
                 32,
                 32,
                 14,
-                0,
-                gl::RGB,
-                gl::UNSIGNED_BYTE,
-                image_file.as_ptr() as *const _,
             );
-            gl::GenerateMipmap(gl::TEXTURE_3D);
+            
+            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_BASE_LEVEL, 0);
+            gl::TexParameteri(gl::TEXTURE_2D_ARRAY, gl::TEXTURE_MAX_LEVEL, 3);
+            
+
+            for i in 0..14 {
+                gl::TexSubImage3D(
+                    gl::TEXTURE_2D_ARRAY,
+                    0,
+                    0,
+                    0,
+                    i,
+                    32,
+                    32,
+                    1,
+                    gl::RGB,
+                    gl::UNSIGNED_BYTE,
+                    image_file.as_ptr().add((i * 32 * 32 * 3) as usize) as *const _,
+                );
+            }
+            gl::GenerateMipmap(gl::TEXTURE_2D_ARRAY);
         }
 
         texture.unbind();
@@ -49,7 +64,7 @@ impl Texture {
     pub fn bind(&mut self, unit: u32) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + unit);
-            gl::BindTexture(gl::TEXTURE_3D, self.id);
+            gl::BindTexture(gl::TEXTURE_2D_ARRAY, self.id);
             self.unit = Some(unit);
         }
     }
@@ -57,7 +72,7 @@ impl Texture {
     pub fn unbind(&mut self) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + self.unit.unwrap());
-            gl::BindTexture(gl::TEXTURE_3D, 0);
+            gl::BindTexture(gl::TEXTURE_2D_ARRAY, 0);
             self.unit = None;
         }
     }
