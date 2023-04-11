@@ -13,7 +13,7 @@ layout(std430, binding = 0) buffer TextureSSBO {
 
 void main() 
 {  
-    vec3 texCoords = vec3(TexCoords.x, TexCoords.y, 0);
+    vec3 texCoords = vec3(TexCoords.x, TexCoords.y, (textureData[int(Pos)] + 0.5) / 14.0);
     vec4 color = texture(atlasTexture, texCoords);
 
     FragColor = color;

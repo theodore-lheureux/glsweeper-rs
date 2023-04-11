@@ -55,9 +55,9 @@ pub fn load_images() -> Vec<u8> {
     let mut data: Vec<u8> = Vec::new();
 
     for file in files.iter_mut() {
-        let mut image = image::load_from_memory(file).expect("Failed to load texture image.");
-        let rgba = image.into_rgb8();
-        data.append(&mut rgba.to_vec());
+        let image = image::load_from_memory(file).expect("Failed to load texture image.");
+        let rgb = image.into_rgb8();
+        data.append(&mut rgb.to_vec());
     }
 
     data

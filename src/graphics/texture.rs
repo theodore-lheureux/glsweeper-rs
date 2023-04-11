@@ -7,8 +7,6 @@ pub struct Texture {
 
 impl Texture {
     pub fn new(image_file: Vec<u8>, unit: u32) -> Self {
-        println!("Creating texture... (texture: {:?})", image_file);
-
         let mut id = 0;
 
         unsafe {
@@ -25,21 +23,22 @@ impl Texture {
         unsafe {
             gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
             gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_R, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE as i32);
+            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_MAG_FILTER, gl::LINEAR_MIPMAP_LINEAR as i32);
             gl::TexImage3D(
                 gl::TEXTURE_3D,
                 0,
-                gl::RGBA as i32,
+                gl::RGB as i32,
                 32,
                 32,
                 14,
                 0,
-                gl::RGBA,
+                gl::RGB,
                 gl::UNSIGNED_BYTE,
                 image_file.as_ptr() as *const _,
             );
+            gl::GenerateMipmap(gl::TEXTURE_3D);
         }
 
         texture.unbind();
