@@ -14,6 +14,8 @@ Mines are hidden in the grid. Click on a tile to reveal it. If it is a mine, you
 - Press <kbd>Space</kbd> to reveal all tiles around a tile or flag the tile if it is not revealed
 - Press <kbd>R</kbd> to start a new game
 - Press <kbd>Escape</kbd> to quit the game
+- Press <kbd>+</kbd> to increase the grid size
+- Press <kbd>-</kbd> to decrease the grid size
 
 ## How to build
 

@@ -1,4 +1,3 @@
-use image::EncodableLayout;
 use log::info;
 
 pub struct Texture {
@@ -8,50 +7,62 @@ pub struct Texture {
 
 impl Texture {
     pub fn new(image_file: Vec<u8>, unit: u32) -> Self {
-        let img = image::load_from_memory(&image_file).expect("Failed to load texture image.");
-        let rgba = img.into_rgba8();
-        let (width, height) = rgba.dimensions();
-
-        info!("Texture loaded. (width: {}, height: {})", width, height);
-
         let mut id = 0;
+
         unsafe {
             gl::GenTextures(1, &mut id);
             gl::ActiveTexture(gl::TEXTURE0 + unit);
-            gl::BindTexture(gl::TEXTURE_2D, id);
+            gl::BindTexture(gl::TEXTURE_2D_ARRAY, id);
         }
 
-        let mut texture = Self {
+        let mut texture = Texture {
             id,
             unit: Some(unit),
         };
 
         unsafe {
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexStorage3D(gl::TEXTURE_2D_ARRAY, 3, gl::RGB8, 32, 32, 14);
+
             gl::TexParameteri(
-                gl::TEXTURE_2D,
+                gl::TEXTURE_2D_ARRAY,
+                gl::TEXTURE_WRAP_S,
+                gl::REPEAT as i32,
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D_ARRAY,
+                gl::TEXTURE_WRAP_T,
+                gl::REPEAT as i32,
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D_ARRAY,
                 gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR_MIPMAP_LINEAR as i32,
+                gl::LINEAR as i32,
             );
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(
+                gl::TEXTURE_2D_ARRAY,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32,
+            );
 
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                rgba.as_bytes().as_ptr() as *const gl::types::GLvoid,
-            );
-            gl::GenerateMipmap(gl::TEXTURE_2D);
+            for i in 0..14 {
+                gl::TexSubImage3D(
+                    gl::TEXTURE_2D_ARRAY,
+                    0,
+                    0,
+                    0,
+                    i,
+                    32,
+                    32,
+                    1,
+                    gl::RGB,
+                    gl::UNSIGNED_BYTE,
+                    image_file.as_ptr().add((i * 32 * 32 * 3) as usize)
+                        as *const _,
+                );
+            }
         }
-        texture.unbind();
 
-        info!("Texture created. (id: {})", id);
+        texture.unbind();
 
         texture
     }
@@ -59,7 +70,7 @@ impl Texture {
     pub fn bind(&mut self, unit: u32) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + unit);
-            gl::BindTexture(gl::TEXTURE_2D, self.id);
+            gl::BindTexture(gl::TEXTURE_2D_ARRAY, self.id);
             self.unit = Some(unit);
         }
     }
@@ -67,7 +78,7 @@ impl Texture {
     pub fn unbind(&mut self) {
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + self.unit.unwrap());
-            gl::BindTexture(gl::TEXTURE_2D, 0);
+            gl::BindTexture(gl::TEXTURE_2D_ARRAY, 0);
             self.unit = None;
         }
     }

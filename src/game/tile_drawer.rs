@@ -1,5 +1,7 @@
 use std::time;
 
+use log::info;
+
 use crate::graphics::ssbo::SSBO;
 
 use super::tile::{Tile, TileState, TileValue};
@@ -14,10 +16,7 @@ impl TileDrawer {
         ssbo.bind();
         ssbo.bind_buffer_base(0);
 
-        let data = tiles
-            .iter()
-            .map(get_texture_offset)
-            .collect::<Vec<f32>>();
+        let data = tiles.iter().map(get_texture_offset).collect::<Vec<f32>>();
 
         ssbo.bind_buffer_data(&data);
 
@@ -29,10 +28,11 @@ impl TileDrawer {
         }
 
         let start = time::Instant::now();
-        let (first_index_changed, last_index_changed) = tiles_changed.iter().fold(
-            (tiles_changed[0], tiles_changed[0]),
-            |(min, max), &index| (min.min(index), max.max(index)),
-        );
+        let (first_index_changed, last_index_changed) =
+            tiles_changed.iter().fold(
+                (tiles_changed[0], tiles_changed[0]),
+                |(min, max), &index| (min.min(index), max.max(index)),
+            );
 
         let data: Vec<f32> = tiles
             .iter()
@@ -45,7 +45,7 @@ impl TileDrawer {
             first_index_changed * std::mem::size_of::<f32>() as isize,
             &data,
         );
-        println!("SSBO update took {:?}, ", start.elapsed());
+        info!("SSBO update took {:?}, ", start.elapsed());
     }
 }
 

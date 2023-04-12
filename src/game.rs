@@ -1,8 +1,10 @@
 use std::{cell::RefCell, rc::Rc, time};
 
+use log::info;
+
 use crate::{
-    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH, MIN_HEIGHT, MIN_WIDTH,
-    WIDTH_INCREMENT,
+    graphics::gl_wrapper::VAO, HEIGHT_INCREMENT, MAX_HEIGHT, MAX_WIDTH,
+    MIN_HEIGHT, MIN_WIDTH, WIDTH_INCREMENT,
 };
 
 use self::{
@@ -89,8 +91,10 @@ impl Game {
                 if start_y == 0 { 1 } else { start_y },
             );
 
-            let is_adjacent =
-                x >= start_x - 1 && x <= start_x + 1 && y >= start_y - 1 && y <= start_y + 1;
+            let is_adjacent = x >= start_x - 1
+                && x <= start_x + 1
+                && y >= start_y - 1
+                && y <= start_y + 1;
 
             if is_adjacent || self.get_tile(x, y).is_bomb() {
                 continue;
@@ -132,7 +136,8 @@ impl Game {
                 tile.set_state(TileState::Exploded);
                 self.reveal_all();
                 if let GameState::Playing(start_time) = self.state {
-                    self.state = GameState::Lost(time::Instant::now() - start_time);
+                    self.state =
+                        GameState::Lost(time::Instant::now() - start_time);
                 }
             }
             TileValue::Empty(0) => {
@@ -247,7 +252,13 @@ impl Game {
         self.tiles.iter().filter(|tile| tile.is_flagged()).count() as isize
     }
 
-    pub fn left_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
+    pub fn left_click(
+        &mut self,
+        x_px: f64,
+        y_px: f64,
+        window_width: f64,
+        window_height: f64,
+    ) {
         let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
@@ -276,7 +287,13 @@ impl Game {
         }
     }
 
-    pub fn right_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
+    pub fn right_click(
+        &mut self,
+        x_px: f64,
+        y_px: f64,
+        window_width: f64,
+        window_height: f64,
+    ) {
         let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
@@ -295,7 +312,13 @@ impl Game {
         }
     }
 
-    pub fn space_click(&mut self, x_px: f64, y_px: f64, window_width: f64, window_height: f64) {
+    pub fn space_click(
+        &mut self,
+        x_px: f64,
+        y_px: f64,
+        window_width: f64,
+        window_height: f64,
+    ) {
         let (x, y) = coordinates::tile_position(
             x_px,
             y_px,
@@ -335,6 +358,7 @@ impl Game {
             return;
         }
 
+        info!("Increasing size to {}x{}", width, height);
         *self = Self::new(width, height);
     }
 
@@ -350,6 +374,7 @@ impl Game {
             return;
         }
 
+        info!("Decreasing size to {}x{}", width, height);
         *self = Self::new(width, height);
     }
 

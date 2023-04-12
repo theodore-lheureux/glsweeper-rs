@@ -19,6 +19,7 @@ impl Window {
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(
             glfw::OpenGlProfileHint::Core,
         ));
+        glfw.window_hint(glfw::WindowHint::Samples(Some(16)));
 
         let (mut window, events) = glfw
             .create_window(width, height, title, glfw::WindowMode::Windowed)
@@ -65,7 +66,9 @@ impl Window {
 
     pub fn init_gl(&mut self) {
         self.window.make_current();
-        gl::load_with(|symbol| self.window.get_proc_address(symbol) as *const _);
+        gl::load_with(|symbol| {
+            self.window.get_proc_address(symbol) as *const _
+        });
 
         unsafe {
             gl::Viewport(
@@ -77,6 +80,7 @@ impl Window {
             gl::Enable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            gl::Enable(gl::MULTISAMPLE);
         }
     }
 
@@ -174,7 +178,9 @@ impl Window {
                 let millis = game_duration.subsec_millis();
                 let time = format!("{}.{}", seconds, millis);
                 self.window.set_title(
-                    &("Minesweeper | You won! | You took ".to_owned() + &*time + " seconds"),
+                    &("Minesweeper | You won! | You took ".to_owned()
+                        + &*time
+                        + " seconds"),
                 );
             }
             GameState::Lost(game_duration) => {
@@ -182,7 +188,9 @@ impl Window {
                 let millis = game_duration.subsec_millis();
                 let time = format!("{}.{}", seconds, millis);
                 self.window.set_title(
-                    &("Minesweeper | You lost! | You took ".to_owned() + &*time + " seconds"),
+                    &("Minesweeper | You lost! | You took ".to_owned()
+                        + &*time
+                        + " seconds"),
                 );
             }
             GameState::Playing(_) => {
