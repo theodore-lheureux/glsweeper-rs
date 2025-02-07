@@ -34,4 +34,4 @@ Mines are hidden in the grid. Click on a tile to reveal it. If it is a mine, you
 
 ### MacOS
 
-- Rip Bozo idk how
+- This version of OpenGL is not supported on Mac.
